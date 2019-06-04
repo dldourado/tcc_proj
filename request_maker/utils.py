@@ -12,7 +12,7 @@ INITIAL_URL = 'https://'
 SERVER = 'br1'
 URL = '.api.riotgames.com/lol/'
 
-API_KEY = "RGAPI-8c5a5486-5c97-4c8f-8805-ee98103ab79c"
+API_KEY = "RGAPI-8c078f07-6472-4279-bf9a-0d42a7441be5"
 
 def make_request(search_type, query_paramethers):
     q = ''
