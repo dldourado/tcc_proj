@@ -162,6 +162,49 @@ class StatsByParticipant(models.Model):
 	objectivePlayerScore = models.IntegerField()
 	win = models.BooleanField()
 
+class FrameByMatch(models.Model):
+	match = models.ForeignKey(Match, null=True, on_delete=models.CASCADE)
+	timestamp = models.IntegerField()
+
+class ParticipantByFrame(models.Model):
+	frame = models.ForeignKey(FrameByMatch, null=True, on_delete=models.CASCADE)
+	totalGold = models.IntegerField()	
+	teamScore = models.IntegerField()	
+	participantId = models.IntegerField()	
+	level = models.IntegerField()	
+	currentGold = models.IntegerField()	
+	minionsKilled = models.IntegerField()	
+	dominionScore = models.IntegerField()	
+	position = models.CharField(max_length=40)#x-y;
+	xp = models.IntegerField()	
+	jungleMinionsKilled = models.IntegerField()
+
+class EventByFrame(models.Model):
+	frame = models.ForeignKey(FrameByMatch, null=True, on_delete=models.CASCADE)
+	eventType = models.CharField(max_length=64, blank=True)
+	towerType = models.CharField(max_length=64, blank=True)
+	teamId = models.IntegerField(blank=True)
+	ascendedType = models.CharField(max_length=64, blank=True)
+	killerId = models.IntegerField(blank=True)
+	levelUpType = models.CharField(max_length=64, blank=True)
+	pointCaptured = models.CharField(max_length=64, blank=True)
+	assistingParticipantIds = models.CharField(max_length=40, blank=True)#x-y-z-w;
+	wardType = models.CharField(max_length=64, blank=True)
+	monsterType = models.CharField(max_length=64, blank=True)
+	eType = models.CharField(max_length=64, blank=True)
+	skillSlot = models.IntegerField(blank=True)
+	victimId = models.IntegerField(blank=True)
+	timestamp = models.CharField(max_length=128, blank=True)	
+	afterId = models.IntegerField(blank=True)
+	monsterSubType = models.CharField(max_length=64, blank=True)
+	laneType = models.CharField(max_length=64, blank=True)
+	itemId = models.IntegerField(blank=True)
+	participantId = models.IntegerField(blank=True)
+	buildingType = models.CharField(max_length=64, blank=True)
+	creatorId = models.IntegerField(blank=True)
+	position = models.CharField(max_length=40, blank=True)#x-y
+	beforeId = models.IntegerField(blank=True)
+
 # class TimelineByParticipant(models.Model):
 # 	participant = models.ForeignKey(ParticipantStatsByMatch, null=True, on_delete=models.SET_NULL)
 # 	lane = models.CharField(max_length=20)
