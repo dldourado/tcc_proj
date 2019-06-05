@@ -223,54 +223,70 @@ def get_timelines():
 			timelines = make_request('match/v4/timelines/by-match/%s' % match.gameId, {'includeTimeline':'true', 'frameInterval':'1000'})#None)
 			try:
 				for frame in timelines['frames']:
-					frame_criado = FrameByMatch.objects.get_or_create(
-						match = match,
-						timestamp = frame['timestamp']
-					)
-					print(frame['participantFrames'])
+					try:
+						frame_criado = FrameByMatch.objects.get(
+							match = match,
+							timestamp = frame['timestamp']
+						)
+					except:
+						frame_criado = FrameByMatch.objects.create(
+							match = match,
+							timestamp = frame['timestamp']
+						)
+
+					#print(frame['participantFrames'])
 					for key, participantFrame in frame['participantFrames'].items():
-						print(participantFrame)
+						#print(participantFrame)
+						position = str(participantFrame['position']['x'])+'-'+str(participantFrame['position']['y'])
 						pf = ParticipantByFrame.objects.get_or_create(
 							frame = frame_criado,
-							totalGold = participantFrame['totalGold'],
-							teamScore = participantFrame['teamScore'],
+							totalGold = participantFrame['totalGold']   if 'totalGold' in participantFrame else 0,
+							teamScore = participantFrame['teamScore']   if 'teamScore' in participantFrame else 0,
 							participantId = participantFrame['participantId'],
-							level = participantFrame['level'],
-							currentGold = participantFrame['currentGold'],
-							minionsKilled = participantFrame['minionsKilled'],
-							dominionScore = participantFrame['dominionScore'],
-							position = participantFrame['position'],
-							xp = participantFrame['xp'],
-							jungleMinionsKilled = participantFrame['jungleMinionsKilled']
+							level = participantFrame['level']   if 'level' in participantFrame else 0,
+							currentGold = participantFrame['currentGold']   if 'currentGold' in participantFrame else 0,
+							minionsKilled = participantFrame['minionsKilled']   if 'minionsKilled' in participantFrame else 0,
+							dominionScore = participantFrame['dominionScore']   if 'dominionScore' in participantFrame else 0,
+							position = position,
+							xp = participantFrame['xp']   if 'xp' in participantFrame else 0,
+							jungleMinionsKilled = participantFrame['jungleMinionsKilled']   if 'jungleMinionsKilled' in participantFrame else 0
 						)
 					for eventFrame in frame['events']:
+						print(eventFrame)
+						assistingParticipantIds = ''
+						if 'assistingParticipantIds' in eventFrame:
+							for aP in eventFrame['assistingParticipantIds']:
+								assistingParticipantIds += str(aP)
+						position = ''
+						if 'position' in eventFrame:
+							position = str(eventFrame['position']['x'])+'-'+str(eventFrame['position']['y'])
 						ef = EventByFrame.objects.get_or_create(
 							frame = frame_criado,
-							eventType = eventFrame['eventType'] if 'eventType' in eventFrame else '',
-							towerType = eventFrame['towerType'] if 'towerType' in eventFrame else '',
-							teamId = eventFrame['teamId'] if 'teamId' in eventFrame else '',
-							ascendedType = eventFrame['ascendedType'] if 'ascendedType' in eventFrame else '',
-							killerId = eventFrame['killerId'] if 'killerId' in eventFrame else '',
-							levelUpType = eventFrame['levelUpType'] if 'levelUpType' in eventFrame else '',
-							pointCaptured = eventFrame['pointCaptured'] if 'pointCaptured' in eventFrame else '',
-							assistingParticipantIds = eventFrame['assistingParticipantIds'] if 'assistingParticipantIds' in eventFrame else '',
-							wardType = eventFrame['wardType'] if 'wardType' in eventFrame else '',
-							monsterType = eventFrame['monsterType'] if 'monsterType' in eventFrame else '',
-							eType = eventFrame['type'] if 'type' in eventFrame else '',
-							skillSlot = eventFrame['skillSlot'] if 'skillSlot' in eventFrame else '',
-							victimId = eventFrame['victimId'] if 'victimId' in eventFrame else '',
-							timestamp = eventFrame['timestamp'] if 'timestamp' in eventFrame else '',
-							afterId = eventFrame['afterId'] if 'afterId' in eventFrame else '',
-							monsterSubType = eventFrame['monsterSubType'] if 'monsterSubType' in eventFrame else '',
-							laneType = eventFrame['laneType'] if 'laneType' in eventFrame else '',
-							itemId = eventFrame['itemId'] if 'itemId' in eventFrame else '',
-							participantId = eventFrame['participantId'] if 'participantId' in eventFrame else '',
-							buildingType = eventFrame['buildingType'] if 'buildingType' in eventFrame else '',
-							creatorId = eventFrame['creatorId'] if 'creatorId' in eventFrame else '',
-							position = eventFrame['position'] if 'position' in eventFrame else '',
-							beforeId = eventFrame['beforeId'] if 'beforeId' in eventFrame else '',
+							eventType = eventFrame['eventType'] if 'eventType' in eventFrame else None,
+							towerType = eventFrame['towerType'] if 'towerType' in eventFrame else None,
+							teamId = eventFrame['teamId'] if 'teamId' in eventFrame else None,
+							ascendedType = eventFrame['ascendedType'] if 'ascendedType' in eventFrame else None,
+							killerId = eventFrame['killerId'] if 'killerId' in eventFrame else None,
+							levelUpType = eventFrame['levelUpType'] if 'levelUpType' in eventFrame else None,
+							pointCaptured = eventFrame['pointCaptured'] if 'pointCaptured' in eventFrame else None,
+							assistingParticipantIds = assistingParticipantIds,#eventFrame['assistingParticipantIds'] if 'assistingParticipantIds' in eventFrame else None,
+							wardType = eventFrame['wardType'] if 'wardType' in eventFrame else None,
+							monsterType = eventFrame['monsterType'] if 'monsterType' in eventFrame else None,
+							eType = eventFrame['type'] if 'type' in eventFrame else None,
+							skillSlot = eventFrame['skillSlot'] if 'skillSlot' in eventFrame else None,
+							victimId = eventFrame['victimId'] if 'victimId' in eventFrame else None,
+							timestamp = eventFrame['timestamp'] if 'timestamp' in eventFrame else None,
+							afterId = eventFrame['afterId'] if 'afterId' in eventFrame else None,
+							monsterSubType = eventFrame['monsterSubType'] if 'monsterSubType' in eventFrame else None,
+							laneType = eventFrame['laneType'] if 'laneType' in eventFrame else None,
+							itemId = eventFrame['itemId'] if 'itemId' in eventFrame else None,
+							participantId = eventFrame['participantId'] if 'participantId' in eventFrame else None,
+							buildingType = eventFrame['buildingType'] if 'buildingType' in eventFrame else None,
+							creatorId = eventFrame['creatorId'] if 'creatorId' in eventFrame else None,
+							position = position,
+							beforeId = eventFrame['beforeId'] if 'beforeId' in eventFrame else None,
 						)
 				error = False	
-			except KeyError:
-				print('keyerror')
+			except KeyError as e:
+				print(e)
 				error = True
