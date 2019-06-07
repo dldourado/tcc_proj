@@ -325,3 +325,4 @@ def create_stats():
 
 	print(blueTeam)
 	print(redTeam)
+			
