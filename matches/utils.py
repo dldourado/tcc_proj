@@ -274,3 +274,54 @@ def get_timelines():
 			except KeyError:
 				print('keyerror')
 				error = True
+
+from django.core import serializers
+
+def create_stats():
+	matches = Match.objects.all()
+	for match in matches:
+		both_team_stats = TeamStatsByMatch.objects.filter(match=match)
+		participants_each_team = ParticipantStatsByMatch.objects.filter(match=match)
+		if both_team_stats.count()==2 and participants_each_team.count()==10:
+			break;
+	blueTeam = {}
+	redTeam = {}
+	for team_stats in both_team_stats:
+		t_stat = {
+			'firstDragon' : team_stats.firstDragon,
+			'firstInhibitor' : team_stats.firstInhibitor,
+			'bans' : team_stats.bans,
+			'baronKills' : team_stats.baronKills,
+			'firstRiftHerald' : team_stats.firstRiftHerald,
+			'firstBaron' : team_stats.firstBaron,
+			'riftHeraldKills' : team_stats.riftHeraldKills,
+			'firstBlood' : team_stats.firstBlood,
+			'teamIsBlue' : team_stats.teamIsBlue,
+			'firstTower' : team_stats.firstTower,
+			'inhibitorKills' : team_stats.inhibitorKills,
+			'towerKills' : team_stats.towerKills,
+			'win' : team_stats.win,
+			'dragonKills' : team_stats.dragonKills
+		}
+		if team_stats.teamIsBlue:
+			blueTeam['teamStats'] = t_stat
+		else:
+			redTeam['teamStats'] = t_stat
+	blueTeam['participants'] = list()
+	redTeam['participants'] = list()
+	for participant_team in participants_each_team:
+		p_team = {
+			'participantId' : participant_team.participantId,
+			'teamIsBlue' : participant_team.teamIsBlue,
+			'spell1Id' : participant_team.spell1Id,
+			'spell2Id' : participant_team.spell2Id,
+			'highestAchievedSeasonTier' : participant_team.highestAchievedSeasonTier,
+			'championId' : participant_team.championId
+		}		
+		if team_stats.teamIsBlue:
+			blueTeam['participants'].append(p_team)
+		else:
+			redTeam['participants'].append(p_team)
+
+	print(blueTeam)
+	print(redTeam)
