@@ -33,7 +33,7 @@ def get_matches_by_summoner():
 
 def get_matches():
 	matches = MatchBySummoner.objects.all()
-	for match in matches:
+	for match in matches[:20]:
 		try:
 			Match.objects.get(gameId=match.gameId)
 
@@ -47,7 +47,7 @@ def get_matches():
 					text = ''
 					for p in matchInfo['participantIdentities']:
 						#print(p)
-						text+=p['player']['summonerName']+'-'+str(p['participantId'])+(';' if p!=matchInfo['participantIdentities'][-1] else '')
+						text+=p['player']['summonerName']+':'+str(p['participantId'])+(';' if p!=matchInfo['participantIdentities'][-1] else '')
 					#print(text)
 					match_criada = Match.objects.create(
 						seasonId = matchInfo['seasonId'],
@@ -66,7 +66,7 @@ def get_matches():
 						for team in matchInfo['teams']:
 							bans = ''
 							for ban in team['bans']:
-								bans += str(ban['pickTurn'])+'-'+str(ban['championId'])+(';' if ban!=team['bans'][-1] else '')
+								bans += str(ban['pickTurn'])+':'+str(ban['championId'])+(';' if ban!=team['bans'][-1] else '')
 							teamStat = TeamStatsByMatch.objects.get_or_create(
 								match = match_criada,
 								firstDragon = team['firstDragon'],
@@ -92,7 +92,7 @@ def get_matches():
 								participant_criado = ParticipantStatsByMatch.objects.create(
 									match = match_criada,
 									participantId = participant['participantId'],
-									teamIsBlue =  True if team['teamId']==100 else False,
+									teamIsBlue =  True if participant['teamId']==100 else False,
 									spell1Id = participant['spell1Id'],
 									spell2Id = participant['spell2Id'],
 									highestAchievedSeasonTier = participant['highestAchievedSeasonTier'] if 'highestAchievedSeasonTier' in participant else '',
@@ -275,7 +275,8 @@ def get_timelines():
 				print('keyerror')
 				error = True
 
-from django.core import serializers
+#from django.core import serializers
+import json
 
 def create_stats():
 	matches = Match.objects.all()
@@ -286,6 +287,7 @@ def create_stats():
 			break;
 	blueTeam = {}
 	redTeam = {}
+	summoners = match.participantIdentities.split(';')
 	for team_stats in both_team_stats:
 		t_stat = {
 			'firstDragon' : team_stats.firstDragon,
@@ -310,7 +312,13 @@ def create_stats():
 	blueTeam['participants'] = list()
 	redTeam['participants'] = list()
 	for participant_team in participants_each_team:
+		name = ''
+		for summoner in summoners:
+			s = summoner.split(':')
+			if int(s[1])==participant_team.participantId:
+				name = s[0]
 		p_team = {
+			'summonerName' : name,
 			'participantId' : participant_team.participantId,
 			'teamIsBlue' : participant_team.teamIsBlue,
 			'spell1Id' : participant_team.spell1Id,
@@ -318,11 +326,123 @@ def create_stats():
 			'highestAchievedSeasonTier' : participant_team.highestAchievedSeasonTier,
 			'championId' : participant_team.championId
 		}		
-		if team_stats.teamIsBlue:
+		statInMatch = StatsByParticipant.objects.filter(participant=participant_team).first()
+		s_part = {
+			'magicDamageDealtToChampions' : statInMatch.magicDamageDealtToChampions,
+			'damageDealtToObjectives' : statInMatch.damageDealtToObjectives,
+			'damageDealtToTurrets' : statInMatch.damageDealtToTurrets,
+			'physicalDamageDealtToChampions' : statInMatch.physicalDamageDealtToChampions,
+			'magicDamageDealt' : statInMatch.magicDamageDealt,
+			'damageSelfMitigated' : statInMatch.damageSelfMitigated,
+			'magicalDamageTaken' : statInMatch.magicalDamageTaken,
+			'trueDamageTaken' : statInMatch.trueDamageTaken,
+			'trueDamageDealt' : statInMatch.trueDamageDealt,
+			'totalDamageTaken' : statInMatch.totalDamageTaken,
+			'physicalDamageDealt' : statInMatch.physicalDamageDealt,
+			'totalDamageDealtToChampions' : statInMatch.totalDamageDealtToChampions,
+			'physicalDamageTaken' : statInMatch.physicalDamageTaken,
+			'totalDamageDealt' : statInMatch.totalDamageDealt,
+			'trueDamageDealtToChampions' : statInMatch.trueDamageDealtToChampions,
+			'totalHeal' : statInMatch.totalHeal,
+			'perk0Var1' : statInMatch.perk0Var1,
+			'perk0Var2' : statInMatch.perk0Var2,
+			'perk0Var3' : statInMatch.perk0Var3,
+			'perk1Var1' : statInMatch.perk1Var1,
+			'perk1Var2' : statInMatch.perk1Var2,
+			'perk1Var3' : statInMatch.perk1Var3,
+			'perk2Var1' : statInMatch.perk2Var1,
+			'perk2Var2' : statInMatch.perk2Var2,
+			'perk2Var3' : statInMatch.perk2Var3,
+			'perk3Var1' : statInMatch.perk3Var1,
+			'perk3Var2' : statInMatch.perk3Var2,
+			'perk3Var3' : statInMatch.perk3Var3,
+			'perk4Var1' : statInMatch.perk4Var1,
+			'perk4Var2' : statInMatch.perk4Var2,
+			'perk4Var3' : statInMatch.perk4Var3,
+			'perk5Var1' : statInMatch.perk5Var1,
+			'perk5Var2' : statInMatch.perk5Var2,
+			'perk5Var3' : statInMatch.perk5Var3,
+			'perk0' : statInMatch.perk0,
+			'perk2' : statInMatch.perk2,
+			'perk1' : statInMatch.perk1,
+			'perk3' : statInMatch.perk3,
+			'perk4' : statInMatch.perk4,
+			'perk5' : statInMatch.perk5,
+			'perkPrimaryStyle' : statInMatch.perkPrimaryStyle,
+			'perkSubStyle' : statInMatch.perkSubStyle,
+			'timeCCingOthers' : statInMatch.timeCCingOthers,
+			'totalTimeCrowdControlDealt' : statInMatch.totalTimeCrowdControlDealt,
+			'longestTimeSpentLiving' : statInMatch.longestTimeSpentLiving,
+			'firstBloodKill' : statInMatch.firstBloodKill,
+			'kills' : statInMatch.kills,
+			'doubleKills' : statInMatch.doubleKills,
+			'tripleKills' : statInMatch.tripleKills,
+			'quadraKills' : statInMatch.quadraKills,
+			'pentaKills' : statInMatch.pentaKills,
+			'unrealKills' : statInMatch.unrealKills,
+			'killingSprees' : statInMatch.killingSprees,
+			'largestMultiKill' : statInMatch.largestMultiKill,
+			'largestKillingSpree' : statInMatch.largestKillingSpree,
+			'assists' : statInMatch.assists,
+			'firstBloodAssist' : statInMatch.firstBloodAssist,
+			'deaths' : statInMatch.deaths,
+			'playerScore0' : statInMatch.playerScore0,
+			'playerScore1' : statInMatch.playerScore1,
+			'playerScore2' : statInMatch.playerScore2,
+			'playerScore3' : statInMatch.playerScore3,
+			'playerScore4' : statInMatch.playerScore4,
+			'playerScore5' : statInMatch.playerScore5,
+			'playerScore6' : statInMatch.playerScore6,
+			'playerScore7' : statInMatch.playerScore7,
+			'playerScore8' : statInMatch.playerScore8,
+			'playerScore9' : statInMatch.playerScore9,
+			'totalScoreRank' : statInMatch.totalScoreRank,
+			'neutralMinionsKilled' : statInMatch.neutralMinionsKilled,
+			'neutralMinionsKilledTeamJungle' : statInMatch.neutralMinionsKilledTeamJungle,
+			'neutralMinionsKilledEnemyJungle' : statInMatch.neutralMinionsKilledEnemyJungle,
+			'totalMinionsKilled' : statInMatch.totalMinionsKilled,
+			'totalUnitsHealed' : statInMatch.totalUnitsHealed,
+			'largestCriticalStrike' : statInMatch.largestCriticalStrike,
+			'item0' : statInMatch.item0,
+			'item1' : statInMatch.item1,
+			'item2' : statInMatch.item2,
+			'item3' : statInMatch.item3,
+			'item4' : statInMatch.item4,
+			'item5' : statInMatch.item5,
+			'item6' : statInMatch.item6,
+			'goldSpent' : statInMatch.goldSpent,
+			'goldEarned' : statInMatch.goldEarned,
+			'champLevel' : statInMatch.champLevel,
+			'firstInhibitorKill' : statInMatch.firstInhibitorKill,
+			'inhibitorKills' : statInMatch.inhibitorKills,
+			'firstInhibitorAssist' : statInMatch.firstInhibitorAssist,
+			'firstTowerAssist' : statInMatch.firstTowerAssist,
+			'firstTowerKill' : statInMatch.firstTowerKill,
+			'turretKills' : statInMatch.turretKills,
+			'combatPlayerScore' : statInMatch.combatPlayerScore,
+			'participantId' : statInMatch.participantId,
+			'sightWardsBoughtInGame' : statInMatch.sightWardsBoughtInGame,
+			'visionWardsBoughtInGame' : statInMatch.visionWardsBoughtInGame,
+			'wardsPlaced' : statInMatch.wardsPlaced,
+			'wardsKilled' : statInMatch.wardsKilled,
+			'totalPlayerScore' : statInMatch.totalPlayerScore,
+			'visionScore' : statInMatch.visionScore,
+			'objectivePlayerScore' : statInMatch.objectivePlayerScore,
+			'win' : statInMatch.win
+		}
+		p_team['stats'] = s_part
+		if participant_team.teamIsBlue:
 			blueTeam['participants'].append(p_team)
 		else:
 			redTeam['participants'].append(p_team)
 
-	print(blueTeam)
-	print(redTeam)
+
+	match_complete_info = {
+		'blueTeam':blueTeam,
+		'redTeam':redTeam
+	}
+	with open('games_json/game%s.json'%match.gameId, 'w') as outfile:  
+		json.dump(match_complete_info, outfile)
+	#print(blueTeam)
+	#print(redTeam)
 			
