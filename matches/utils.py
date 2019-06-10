@@ -322,175 +322,215 @@ def stats_by_team(team):
 		total_stats['longestTimeSpentLiving'] += player['stats']['longestTimeSpentLiving']
 	return total_stats
 
+def create_team_stats_in_match(match):
+	both_team_stats = TeamStatsByMatch.objects.filter(match=match)
+	participants_each_team = ParticipantStatsByMatch.objects.filter(match=match)
+	if both_team_stats.count()!=2 or participants_each_team.count()!=10:
+		return None
+	blueTeam = {}
+	redTeam = {}
+	summoners = match.participantIdentities.split(';')
+	for team_stats in both_team_stats:
+		t_stat = {
+			'firstDragon' : team_stats.firstDragon,
+			'firstInhibitor' : team_stats.firstInhibitor,
+			'bans' : team_stats.bans,
+			'baronKills' : team_stats.baronKills,
+			'firstRiftHerald' : team_stats.firstRiftHerald,
+			'firstBaron' : team_stats.firstBaron,
+			'riftHeraldKills' : team_stats.riftHeraldKills,
+			'firstBlood' : team_stats.firstBlood,
+			'teamIsBlue' : team_stats.teamIsBlue,
+			'firstTower' : team_stats.firstTower,
+			'inhibitorKills' : team_stats.inhibitorKills,
+			'towerKills' : team_stats.towerKills,
+			'win' : team_stats.win,
+			'dragonKills' : team_stats.dragonKills
+		}
+		if team_stats.teamIsBlue:
+			blueTeam['teamStats'] = t_stat
+		else:
+			redTeam['teamStats'] = t_stat
+	blueTeam['participants'] = list()
+	redTeam['participants'] = list()
+	for participant_team in participants_each_team:
+		name = ''
+		for summoner in summoners:
+			s = summoner.split(':')
+			if int(s[1])==participant_team.participantId:
+				name = s[0]
+		p_team = {
+			'summonerName' : name,
+			'participantId' : participant_team.participantId,
+			'teamIsBlue' : participant_team.teamIsBlue,
+			'spell1Id' : participant_team.spell1Id,
+			'spell2Id' : participant_team.spell2Id,
+			'highestAchievedSeasonTier' : participant_team.highestAchievedSeasonTier,
+			'championId' : participant_team.championId
+		}		
+		statInMatch = StatsByParticipant.objects.filter(participant=participant_team).first()
+		s_part = {
+			'magicDamageDealtToChampions' : statInMatch.magicDamageDealtToChampions,
+			'damageDealtToObjectives' : statInMatch.damageDealtToObjectives,
+			'damageDealtToTurrets' : statInMatch.damageDealtToTurrets,
+			'physicalDamageDealtToChampions' : statInMatch.physicalDamageDealtToChampions,
+			'magicDamageDealt' : statInMatch.magicDamageDealt,
+			'damageSelfMitigated' : statInMatch.damageSelfMitigated,
+			'magicalDamageTaken' : statInMatch.magicalDamageTaken,
+			'trueDamageTaken' : statInMatch.trueDamageTaken,
+			'trueDamageDealt' : statInMatch.trueDamageDealt,
+			'totalDamageTaken' : statInMatch.totalDamageTaken,
+			'physicalDamageDealt' : statInMatch.physicalDamageDealt,
+			'totalDamageDealtToChampions' : statInMatch.totalDamageDealtToChampions,
+			'physicalDamageTaken' : statInMatch.physicalDamageTaken,
+			'totalDamageDealt' : statInMatch.totalDamageDealt,
+			'trueDamageDealtToChampions' : statInMatch.trueDamageDealtToChampions,
+			'totalHeal' : statInMatch.totalHeal,
+			'timeCCingOthers' : statInMatch.timeCCingOthers,
+			'totalTimeCrowdControlDealt' : statInMatch.totalTimeCrowdControlDealt,
+			'longestTimeSpentLiving' : statInMatch.longestTimeSpentLiving,
+			'perk0Var1' : statInMatch.perk0Var1,
+			'perk0Var2' : statInMatch.perk0Var2,
+			'perk0Var3' : statInMatch.perk0Var3,
+			'perk1Var1' : statInMatch.perk1Var1,
+			'perk1Var2' : statInMatch.perk1Var2,
+			'perk1Var3' : statInMatch.perk1Var3,
+			'perk2Var1' : statInMatch.perk2Var1,
+			'perk2Var2' : statInMatch.perk2Var2,
+			'perk2Var3' : statInMatch.perk2Var3,
+			'perk3Var1' : statInMatch.perk3Var1,
+			'perk3Var2' : statInMatch.perk3Var2,
+			'perk3Var3' : statInMatch.perk3Var3,
+			'perk4Var1' : statInMatch.perk4Var1,
+			'perk4Var2' : statInMatch.perk4Var2,
+			'perk4Var3' : statInMatch.perk4Var3,
+			'perk5Var1' : statInMatch.perk5Var1,
+			'perk5Var2' : statInMatch.perk5Var2,
+			'perk5Var3' : statInMatch.perk5Var3,
+			'perk0' : statInMatch.perk0,
+			'perk2' : statInMatch.perk2,
+			'perk1' : statInMatch.perk1,
+			'perk3' : statInMatch.perk3,
+			'perk4' : statInMatch.perk4,
+			'perk5' : statInMatch.perk5,
+			'perkPrimaryStyle' : statInMatch.perkPrimaryStyle,
+			'perkSubStyle' : statInMatch.perkSubStyle,
+			'firstBloodKill' : statInMatch.firstBloodKill,
+			'kills' : statInMatch.kills,
+			'doubleKills' : statInMatch.doubleKills,
+			'tripleKills' : statInMatch.tripleKills,
+			'quadraKills' : statInMatch.quadraKills,
+			'pentaKills' : statInMatch.pentaKills,
+			'unrealKills' : statInMatch.unrealKills,
+			'killingSprees' : statInMatch.killingSprees,
+			'largestMultiKill' : statInMatch.largestMultiKill,
+			'largestKillingSpree' : statInMatch.largestKillingSpree,
+			'assists' : statInMatch.assists,
+			'firstBloodAssist' : statInMatch.firstBloodAssist,
+			'deaths' : statInMatch.deaths,
+			'playerScore0' : statInMatch.playerScore0,
+			'playerScore1' : statInMatch.playerScore1,
+			'playerScore2' : statInMatch.playerScore2,
+			'playerScore3' : statInMatch.playerScore3,
+			'playerScore4' : statInMatch.playerScore4,
+			'playerScore5' : statInMatch.playerScore5,
+			'playerScore6' : statInMatch.playerScore6,
+			'playerScore7' : statInMatch.playerScore7,
+			'playerScore8' : statInMatch.playerScore8,
+			'playerScore9' : statInMatch.playerScore9,
+			'totalScoreRank' : statInMatch.totalScoreRank,
+			'neutralMinionsKilled' : statInMatch.neutralMinionsKilled,
+			'neutralMinionsKilledTeamJungle' : statInMatch.neutralMinionsKilledTeamJungle,
+			'neutralMinionsKilledEnemyJungle' : statInMatch.neutralMinionsKilledEnemyJungle,
+			'totalMinionsKilled' : statInMatch.totalMinionsKilled,
+			'totalUnitsHealed' : statInMatch.totalUnitsHealed,
+			'largestCriticalStrike' : statInMatch.largestCriticalStrike,
+			'item0' : statInMatch.item0,
+			'item1' : statInMatch.item1,
+			'item2' : statInMatch.item2,
+			'item3' : statInMatch.item3,
+			'item4' : statInMatch.item4,
+			'item5' : statInMatch.item5,
+			'item6' : statInMatch.item6,
+			'goldSpent' : statInMatch.goldSpent,
+			'goldEarned' : statInMatch.goldEarned,
+			'champLevel' : statInMatch.champLevel,
+			'firstInhibitorKill' : statInMatch.firstInhibitorKill,
+			'inhibitorKills' : statInMatch.inhibitorKills,
+			'firstInhibitorAssist' : statInMatch.firstInhibitorAssist,
+			'firstTowerAssist' : statInMatch.firstTowerAssist,
+			'firstTowerKill' : statInMatch.firstTowerKill,
+			'turretKills' : statInMatch.turretKills,
+			'combatPlayerScore' : statInMatch.combatPlayerScore,
+			'participantId' : statInMatch.participantId,
+			'sightWardsBoughtInGame' : statInMatch.sightWardsBoughtInGame,
+			'visionWardsBoughtInGame' : statInMatch.visionWardsBoughtInGame,
+			'wardsPlaced' : statInMatch.wardsPlaced,
+			'wardsKilled' : statInMatch.wardsKilled,
+			'totalPlayerScore' : statInMatch.totalPlayerScore,
+			'visionScore' : statInMatch.visionScore,
+			'objectivePlayerScore' : statInMatch.objectivePlayerScore,
+			'win' : statInMatch.win
+		}
+		p_team['stats'] = s_part
+		if participant_team.teamIsBlue:
+			blueTeam['participants'].append(p_team)
+		else:
+			redTeam['participants'].append(p_team)
+	blueTeam['totalStats'] = stats_by_team(blueTeam)
+	redTeam['totalStats'] = stats_by_team(redTeam)
+
+	match_complete_info = {
+		'gameId' : match.gameId,
+		'gameDuration' : match.gameDuration,
+		'gameCreation' : match.gameCreation,
+		'blueTeam':blueTeam,
+		'redTeam':redTeam
+	}
+	return match_complete_info
+
 def create_stats():
 	matches = Match.objects.all()
 	for match in matches:
-		both_team_stats = TeamStatsByMatch.objects.filter(match=match)
-		participants_each_team = ParticipantStatsByMatch.objects.filter(match=match)
-		if both_team_stats.count()!=2 or participants_each_team.count()!=10:
-			continue;
-		blueTeam = {}
-		redTeam = {}
-		summoners = match.participantIdentities.split(';')
-		for team_stats in both_team_stats:
-			t_stat = {
-				'firstDragon' : team_stats.firstDragon,
-				'firstInhibitor' : team_stats.firstInhibitor,
-				'bans' : team_stats.bans,
-				'baronKills' : team_stats.baronKills,
-				'firstRiftHerald' : team_stats.firstRiftHerald,
-				'firstBaron' : team_stats.firstBaron,
-				'riftHeraldKills' : team_stats.riftHeraldKills,
-				'firstBlood' : team_stats.firstBlood,
-				'teamIsBlue' : team_stats.teamIsBlue,
-				'firstTower' : team_stats.firstTower,
-				'inhibitorKills' : team_stats.inhibitorKills,
-				'towerKills' : team_stats.towerKills,
-				'win' : team_stats.win,
-				'dragonKills' : team_stats.dragonKills
-			}
-			if team_stats.teamIsBlue:
-				blueTeam['teamStats'] = t_stat
-			else:
-				redTeam['teamStats'] = t_stat
-		blueTeam['participants'] = list()
-		redTeam['participants'] = list()
-		for participant_team in participants_each_team:
-			name = ''
-			for summoner in summoners:
-				s = summoner.split(':')
-				if int(s[1])==participant_team.participantId:
-					name = s[0]
-			p_team = {
-				'summonerName' : name,
-				'participantId' : participant_team.participantId,
-				'teamIsBlue' : participant_team.teamIsBlue,
-				'spell1Id' : participant_team.spell1Id,
-				'spell2Id' : participant_team.spell2Id,
-				'highestAchievedSeasonTier' : participant_team.highestAchievedSeasonTier,
-				'championId' : participant_team.championId
-			}		
-			statInMatch = StatsByParticipant.objects.filter(participant=participant_team).first()
-			s_part = {
-				'magicDamageDealtToChampions' : statInMatch.magicDamageDealtToChampions,
-				'damageDealtToObjectives' : statInMatch.damageDealtToObjectives,
-				'damageDealtToTurrets' : statInMatch.damageDealtToTurrets,
-				'physicalDamageDealtToChampions' : statInMatch.physicalDamageDealtToChampions,
-				'magicDamageDealt' : statInMatch.magicDamageDealt,
-				'damageSelfMitigated' : statInMatch.damageSelfMitigated,
-				'magicalDamageTaken' : statInMatch.magicalDamageTaken,
-				'trueDamageTaken' : statInMatch.trueDamageTaken,
-				'trueDamageDealt' : statInMatch.trueDamageDealt,
-				'totalDamageTaken' : statInMatch.totalDamageTaken,
-				'physicalDamageDealt' : statInMatch.physicalDamageDealt,
-				'totalDamageDealtToChampions' : statInMatch.totalDamageDealtToChampions,
-				'physicalDamageTaken' : statInMatch.physicalDamageTaken,
-				'totalDamageDealt' : statInMatch.totalDamageDealt,
-				'trueDamageDealtToChampions' : statInMatch.trueDamageDealtToChampions,
-				'totalHeal' : statInMatch.totalHeal,
-				'timeCCingOthers' : statInMatch.timeCCingOthers,
-				'totalTimeCrowdControlDealt' : statInMatch.totalTimeCrowdControlDealt,
-				'longestTimeSpentLiving' : statInMatch.longestTimeSpentLiving,
-				'perk0Var1' : statInMatch.perk0Var1,
-				'perk0Var2' : statInMatch.perk0Var2,
-				'perk0Var3' : statInMatch.perk0Var3,
-				'perk1Var1' : statInMatch.perk1Var1,
-				'perk1Var2' : statInMatch.perk1Var2,
-				'perk1Var3' : statInMatch.perk1Var3,
-				'perk2Var1' : statInMatch.perk2Var1,
-				'perk2Var2' : statInMatch.perk2Var2,
-				'perk2Var3' : statInMatch.perk2Var3,
-				'perk3Var1' : statInMatch.perk3Var1,
-				'perk3Var2' : statInMatch.perk3Var2,
-				'perk3Var3' : statInMatch.perk3Var3,
-				'perk4Var1' : statInMatch.perk4Var1,
-				'perk4Var2' : statInMatch.perk4Var2,
-				'perk4Var3' : statInMatch.perk4Var3,
-				'perk5Var1' : statInMatch.perk5Var1,
-				'perk5Var2' : statInMatch.perk5Var2,
-				'perk5Var3' : statInMatch.perk5Var3,
-				'perk0' : statInMatch.perk0,
-				'perk2' : statInMatch.perk2,
-				'perk1' : statInMatch.perk1,
-				'perk3' : statInMatch.perk3,
-				'perk4' : statInMatch.perk4,
-				'perk5' : statInMatch.perk5,
-				'perkPrimaryStyle' : statInMatch.perkPrimaryStyle,
-				'perkSubStyle' : statInMatch.perkSubStyle,
-				'firstBloodKill' : statInMatch.firstBloodKill,
-				'kills' : statInMatch.kills,
-				'doubleKills' : statInMatch.doubleKills,
-				'tripleKills' : statInMatch.tripleKills,
-				'quadraKills' : statInMatch.quadraKills,
-				'pentaKills' : statInMatch.pentaKills,
-				'unrealKills' : statInMatch.unrealKills,
-				'killingSprees' : statInMatch.killingSprees,
-				'largestMultiKill' : statInMatch.largestMultiKill,
-				'largestKillingSpree' : statInMatch.largestKillingSpree,
-				'assists' : statInMatch.assists,
-				'firstBloodAssist' : statInMatch.firstBloodAssist,
-				'deaths' : statInMatch.deaths,
-				'playerScore0' : statInMatch.playerScore0,
-				'playerScore1' : statInMatch.playerScore1,
-				'playerScore2' : statInMatch.playerScore2,
-				'playerScore3' : statInMatch.playerScore3,
-				'playerScore4' : statInMatch.playerScore4,
-				'playerScore5' : statInMatch.playerScore5,
-				'playerScore6' : statInMatch.playerScore6,
-				'playerScore7' : statInMatch.playerScore7,
-				'playerScore8' : statInMatch.playerScore8,
-				'playerScore9' : statInMatch.playerScore9,
-				'totalScoreRank' : statInMatch.totalScoreRank,
-				'neutralMinionsKilled' : statInMatch.neutralMinionsKilled,
-				'neutralMinionsKilledTeamJungle' : statInMatch.neutralMinionsKilledTeamJungle,
-				'neutralMinionsKilledEnemyJungle' : statInMatch.neutralMinionsKilledEnemyJungle,
-				'totalMinionsKilled' : statInMatch.totalMinionsKilled,
-				'totalUnitsHealed' : statInMatch.totalUnitsHealed,
-				'largestCriticalStrike' : statInMatch.largestCriticalStrike,
-				'item0' : statInMatch.item0,
-				'item1' : statInMatch.item1,
-				'item2' : statInMatch.item2,
-				'item3' : statInMatch.item3,
-				'item4' : statInMatch.item4,
-				'item5' : statInMatch.item5,
-				'item6' : statInMatch.item6,
-				'goldSpent' : statInMatch.goldSpent,
-				'goldEarned' : statInMatch.goldEarned,
-				'champLevel' : statInMatch.champLevel,
-				'firstInhibitorKill' : statInMatch.firstInhibitorKill,
-				'inhibitorKills' : statInMatch.inhibitorKills,
-				'firstInhibitorAssist' : statInMatch.firstInhibitorAssist,
-				'firstTowerAssist' : statInMatch.firstTowerAssist,
-				'firstTowerKill' : statInMatch.firstTowerKill,
-				'turretKills' : statInMatch.turretKills,
-				'combatPlayerScore' : statInMatch.combatPlayerScore,
-				'participantId' : statInMatch.participantId,
-				'sightWardsBoughtInGame' : statInMatch.sightWardsBoughtInGame,
-				'visionWardsBoughtInGame' : statInMatch.visionWardsBoughtInGame,
-				'wardsPlaced' : statInMatch.wardsPlaced,
-				'wardsKilled' : statInMatch.wardsKilled,
-				'totalPlayerScore' : statInMatch.totalPlayerScore,
-				'visionScore' : statInMatch.visionScore,
-				'objectivePlayerScore' : statInMatch.objectivePlayerScore,
-				'win' : statInMatch.win
-			}
-			p_team['stats'] = s_part
-			if participant_team.teamIsBlue:
-				blueTeam['participants'].append(p_team)
-			else:
-				redTeam['participants'].append(p_team)
-		blueTeam['totalStats'] = stats_by_team(blueTeam)
-		redTeam['totalStats'] = stats_by_team(redTeam)
-
-		match_complete_info = {
-			'gameId' : match.gameId,
-			'gameDuration' : match.gameDuration,
-			'gameCreation' : match.gameCreation,
-			'blueTeam':blueTeam,
-			'redTeam':redTeam
-		}
-		with open('games_json/game%s.json'%match.gameId, 'w') as outfile:  
-			json.dump(match_complete_info, outfile)
+		match_complete_info = create_team_stats_in_match(match)
+		if match_complete_info != None:
+			with open('games_json/game%s.json'%match.gameId, 'w') as outfile:  
+				json.dump(match_complete_info, outfile)
 	#print(blueTeam)
 	#print(redTeam)
-			
+
+def create_player_stats():
+	summoner = Summoner.objects.filter(summonerName="Little Wos").first()
+	matches_bs = MatchBySummoner.objects.filter(summoner=summoner)
+	matches = Match.objects.filter(gameId__in=matches_bs.values_list('gameId'))
+	player_matches = []
+	for match in matches:
+		match_complete_info = create_team_stats_in_match(match)
+		if match_complete_info == None:
+			continue
+		m_info = {}
+		m_info['gameCreation'] = match.gameCreation
+		m_info['playerStats'] = {}
+		m_info['teamIsBlue'] = False
+		for participant in match_complete_info['blueTeam']['participants']:
+			if participant['summonerName']==summoner.summonerName:
+				m_info['playerStats']=participant
+				m_info['teamIsBlue'] = True
+		for participant in match_complete_info['redTeam']['participants']:
+			if participant['summonerName']==summoner.summonerName:
+				m_info['playerStats']=participant
+
+		if m_info['teamIsBlue']:
+			m_info['alliedStats'] = match_complete_info['blueTeam']['totalStats']
+			m_info['oponentStats'] = match_complete_info['redTeam']['totalStats']
+		else:
+			m_info['alliedStats'] = match_complete_info['redTeam']['totalStats']
+			m_info['oponentStats'] = match_complete_info['blueTeam']['totalStats']
+		player_matches.append(m_info)
+
+	player_complete_info = {
+		'summonerName':summoner.summonerName,
+		'matches':player_matches
+	}
+	with open('games_json_player/player%s.json'%summoner.summonerName, 'w') as outfile:  
+		json.dump(player_complete_info, outfile)
