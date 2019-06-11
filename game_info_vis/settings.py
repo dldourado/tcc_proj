@@ -122,5 +122,6 @@ STATIC_URL = '/static/'
 
 INSTALLED_APPS += [
     'summoner',
-    'matches'
+    'matches',
+    'visualization'
 ]
