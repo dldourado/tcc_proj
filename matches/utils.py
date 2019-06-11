@@ -489,6 +489,96 @@ def create_team_stats_in_match(match):
 	}
 	return match_complete_info
 
+def create_resumed_stats_in_match(match):
+	both_team_stats = TeamStatsByMatch.objects.filter(match=match)
+	participants_each_team = ParticipantStatsByMatch.objects.filter(match=match)
+	if both_team_stats.count()!=2 or participants_each_team.count()!=10:
+		return None
+	blueTeam = {}
+	redTeam = {}
+	summoners = match.participantIdentities.split(';')
+	for team_stats in both_team_stats:
+		t_stat = {
+			'firstDragon' : team_stats.firstDragon,
+			'firstInhibitor' : team_stats.firstInhibitor,
+			'bans' : team_stats.bans,
+			'baronKills' : team_stats.baronKills,
+			'firstRiftHerald' : team_stats.firstRiftHerald,
+			'firstBaron' : team_stats.firstBaron,
+			'riftHeraldKills' : team_stats.riftHeraldKills,
+			'firstBlood' : team_stats.firstBlood,
+			'teamIsBlue' : team_stats.teamIsBlue,
+			'firstTower' : team_stats.firstTower,
+			'inhibitorKills' : team_stats.inhibitorKills,
+			'towerKills' : team_stats.towerKills,
+			'win' : team_stats.win,
+			'dragonKills' : team_stats.dragonKills
+		}
+		if team_stats.teamIsBlue:
+			blueTeam['teamStats'] = t_stat
+		else:
+			redTeam['teamStats'] = t_stat
+	blueTeam['participants'] = list()
+	redTeam['participants'] = list()
+	for participant_team in participants_each_team:
+		name = ''
+		for summoner in summoners:
+			s = summoner.split(':')
+			if int(s[1])==participant_team.participantId:
+				name = s[0]
+		p_team = {
+			'summonerName' : name,
+			'participantId' : participant_team.participantId,
+			'teamIsBlue' : participant_team.teamIsBlue,
+			'spell1Id' : participant_team.spell1Id,
+			'spell2Id' : participant_team.spell2Id,
+			'highestAchievedSeasonTier' : participant_team.highestAchievedSeasonTier,
+			'championId' : participant_team.championId
+		}		
+		statInMatch = StatsByParticipant.objects.filter(participant=participant_team).first()
+		s_part = {
+			'magicDamageDealtToChampions' : statInMatch.magicDamageDealtToChampions,
+			'damageDealtToObjectives' : statInMatch.damageDealtToObjectives,
+			'damageDealtToTurrets' : statInMatch.damageDealtToTurrets,
+			'physicalDamageDealtToChampions' : statInMatch.physicalDamageDealtToChampions,
+			'magicDamageDealt' : statInMatch.magicDamageDealt,
+			'damageSelfMitigated' : statInMatch.damageSelfMitigated,
+			'magicalDamageTaken' : statInMatch.magicalDamageTaken,
+			'trueDamageTaken' : statInMatch.trueDamageTaken,
+			'trueDamageDealt' : statInMatch.trueDamageDealt,
+			'totalDamageTaken' : statInMatch.totalDamageTaken,
+			'physicalDamageDealt' : statInMatch.physicalDamageDealt,
+			'totalDamageDealtToChampions' : statInMatch.totalDamageDealtToChampions,
+			'physicalDamageTaken' : statInMatch.physicalDamageTaken,
+			'totalDamageDealt' : statInMatch.totalDamageDealt,
+			'trueDamageDealtToChampions' : statInMatch.trueDamageDealtToChampions,
+			'totalHeal' : statInMatch.totalHeal,
+			'timeCCingOthers' : statInMatch.timeCCingOthers,
+			'totalTimeCrowdControlDealt' : statInMatch.totalTimeCrowdControlDealt,
+			'longestTimeSpentLiving' : statInMatch.longestTimeSpentLiving,
+			'kills' : statInMatch.kills,
+			'assists' : statInMatch.assists,
+			'deaths' : statInMatch.deaths,
+			'goldEarned' : statInMatch.goldEarned,
+			'champLevel' : statInMatch.champLevel
+		}
+		p_team['stats'] = s_part
+		if participant_team.teamIsBlue:
+			blueTeam['participants'].append(p_team)
+		else:
+			redTeam['participants'].append(p_team)
+	blueTeam['totalStats'] = stats_by_team(blueTeam)
+	redTeam['totalStats'] = stats_by_team(redTeam)
+
+	match_complete_info = {
+		'gameId' : match.gameId,
+		'gameDuration' : match.gameDuration,
+		'gameCreation' : match.gameCreation,
+		'blueTeam':blueTeam,
+		'redTeam':redTeam
+	}
+	return match_complete_info
+
 def create_stats():
 	matches = Match.objects.all()
 	for match in matches:
