@@ -556,11 +556,11 @@ def create_resumed_stats_in_match(match):
 			'timeCCingOthers' : statInMatch.timeCCingOthers,
 			'totalTimeCrowdControlDealt' : statInMatch.totalTimeCrowdControlDealt,
 			'longestTimeSpentLiving' : statInMatch.longestTimeSpentLiving,
+			'champLevel' : statInMatch.champLevel,
 			'kills' : statInMatch.kills,
 			'assists' : statInMatch.assists,
 			'deaths' : statInMatch.deaths,
-			'goldEarned' : statInMatch.goldEarned,
-			'champLevel' : statInMatch.champLevel
+			'goldEarned' : statInMatch.goldEarned
 		}
 		p_team['stats'] = s_part
 		if participant_team.teamIsBlue:

@@ -128,7 +128,7 @@
 			/* Desenha as linhas */
 			ctx.lineWidth = 1
 			var altura_usavel = (h-(a/2))-a
-			var n_players = Object.keys(data['blueTeam']).length+Object.keys(data['redTeam']).length
+			var n_players = Object.keys(data['blueTeam']['participants']).length+Object.keys(data['redTeam']['participants']).length
 			var i = 0
 			for(const [idx, player] of Object.entries(data['blueTeam']['participants'])){
 				var txtW = ctx.measureText(player['summonerName']).width
