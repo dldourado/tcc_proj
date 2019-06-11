@@ -116,10 +116,10 @@
 			txtTopVal.push('')
 			txtBottomVal.push('')
 			for(var i=0;i<txtArray.length;i++){
-				var txtW = ctx.measureText(txtArray[i]).width
-				ctx.fillText(txtArray[i],(i*(w/tam))+(l-((l*i*2)/tam)-(txtW/2)),12)
+				var txtW = ctx.measureText(txtArray[i].slice(0,10)).width
+				ctx.fillText(txtArray[i].slice(0,10),(i*(w/tam))+(l-((l*i*2)/tam)-(txtW/2)),(i%2 == 0)?12:32)
 				txtW = ctx.measureText(txtTopVal[i]).width
-				ctx.fillText(txtTopVal[i],(i*(w/tam))+(l-((l*i*2)/tam)-(txtW/2)),32)
+				ctx.fillText(txtTopVal[i],(i*(w/tam))+(l-((l*i*2)/tam)-(txtW/2)),a-8)
 				txtW = ctx.measureText(txtBottomVal[i]).width
 				ctx.fillText(txtBottomVal[i],(i*(w/tam))+(l-((l*i*2)/tam)-(txtW/2)),h-8)
 			}		
