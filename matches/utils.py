@@ -33,7 +33,7 @@ def get_matches_by_summoner():
 
 def get_matches():
 	matches = MatchBySummoner.objects.all()
-	for match in matches[:20]:
+	for match in matches:
 		try:
 			Match.objects.get(gameId=match.gameId)
 
@@ -146,7 +146,7 @@ def get_matches():
 								timeCCingOthers = participant['stats']['timeCCingOthers'],
 								totalTimeCrowdControlDealt = participant['stats']['totalTimeCrowdControlDealt'],
 								longestTimeSpentLiving = participant['stats']['longestTimeSpentLiving'],
-								firstBloodKill = participant['stats']['firstBloodKill'],
+								firstBloodKill = participant['stats']['firstBloodKill'] if 'firstBloodKill' in participant['stats'] else False,
 								kills = participant['stats']['kills'],
 								doubleKills = participant['stats']['doubleKills'],
 								tripleKills = participant['stats']['tripleKills'],
@@ -157,7 +157,7 @@ def get_matches():
 								largestMultiKill = participant['stats']['largestMultiKill'],
 								largestKillingSpree = participant['stats']['largestKillingSpree'],
 								assists = participant['stats']['assists'],
-								firstBloodAssist = participant['stats']['firstBloodAssist'],
+								firstBloodAssist = participant['stats']['firstBloodAssist'] if 'firstBloodAssist' in participant['stats'] else False,
 								deaths = participant['stats']['deaths'],
 								playerScore0 = participant['stats']['playerScore0'],
 								playerScore1 = participant['stats']['playerScore1'],
@@ -204,8 +204,8 @@ def get_matches():
 								win = participant['stats']['win']
 							)
 					error = False	
-				except KeyError:
-					print('keyerror')
+				except KeyError as e:
+					print(e)
 					error = True
 
 			#print(e)

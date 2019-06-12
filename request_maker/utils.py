@@ -5,14 +5,11 @@ import time
 
 #initial_time = time.time()
 
-NUMERO_JOGADORES = 30
-NUMERO_PARTIDAS = 20
-
 INITIAL_URL = 'https://'
 SERVER = 'br1'
 URL = '.api.riotgames.com/lol/'
 
-API_KEY = "RGAPI-741b9235-a38e-4cd7-bb96-e135a4025c59"
+API_KEY = "RGAPI-9c79873a-cfdb-4058-ab37-701726c263cb"
 
 def make_request(search_type, query_paramethers):
     q = ''
