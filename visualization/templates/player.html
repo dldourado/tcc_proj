@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Visualization</title>
+</head>
+<body>
+	<canvas id="matchCanvas"  width="1200" height="600" style="position: absolute;"></canvas>
+	<script type="text/javascript">
+		function loadDoc() {
+			var xhttp = new XMLHttpRequest();
+			xhttp.onreadystatechange = function() {
+				if (this.readyState == 4 && this.status == 200) {
+				//console.log(this.responseText);
+				init(JSON.parse(this.responseText).data)
+				}
+			};
+			xhttp.open("GET", "/get_player/?id="+"A2p_eMneZwEcxEYKtI1De_JsuuEFf1KMM6TS_y5qAHo", true);
+			xhttp.send();
+		}
+		function getY(stats, key, player){
+			var statDifference = stats[key]['max']-stats[key]['min']
+			var playerDifference = player[key]-stats[key]['min']
+			return (1-(playerDifference/statDifference))
+		}
+		loadDoc()
+		var display = document.getElementById("matchCanvas");
+		var w = display.offsetWidth;
+		var l = w/10;
+		var h = display.offsetHeight;
+		var a = h/10;
+
+		var ctx = display.getContext("2d");
+
+		var data = {
+			'blueTeam': [
+				{'summonerName':'summoner1', 'summonerStats': {'damage':100, 'defense':20, 'life':1}},
+				{'summonerName':'summoner2', 'summonerStats': {'damage':200, 'defense':30, 'life':2}},
+				{'summonerName':'summoner3', 'summonerStats': {'damage':300, 'defense':30, 'life':3}},
+				{'summonerName':'summoner4', 'summonerStats': {'damage':50,  'defense':10, 'life':4}},
+				{'summonerName':'summoner5', 'summonerStats': {'damage':156, 'defense':25, 'life':5}}
+			],
+			'redTeam': [
+				{'summonerName':'summoner6', 'summonerStats': {'damage':110, 'defense':24, 'life':1}},
+				{'summonerName':'summoner7', 'summonerStats': {'damage':210, 'defense':36, 'life':6}},
+				{'summonerName':'summoner8', 'summonerStats': {'damage':310, 'defense':32, 'life':7}},
+				{'summonerName':'summoner9', 'summonerStats': {'damage':45,  'defense':11, 'life':8}},
+				{'summonerName':'summoner10', 'summonerStats': {'damage':116, 'defense':45, 'life':9}}
+			]
+		}
+		function init(data){
+			let stats = {
+				'controls':{}
+			}
+			console.log(data)
+			for(const [idx, player] of Object.entries(data['matches'])){			
+				for(const [key, stat] of Object.entries(player['playerStats']['stats'])){				
+					if(key in stats['controls']){
+						if(stat<stats['controls'][key]['min']){
+							stats['controls'][key]['min']=stat
+						}
+						if(stat>stats['controls'][key]['max']){
+							stats['controls'][key]['max'] = stat
+						}
+
+					}
+					else{
+						stats['controls'][key] = {}
+						stats['controls'][key]['min'] = stat
+						stats['controls'][key]['max'] = stat
+					}
+				}
+			}
+			var tam = Object.keys(stats['controls']).length+1
+
+			/* Desenha as linhas das coordenadas paralelas */
+			ctx.lineWidth = 2
+			ctx.beginPath()
+			ctx.strokeStyle = 'black'
+			for(var i=0;i<tam+1;i++){
+				//console.log((i*(w/tam))+(l-((l*i*2)/tam)),h)
+				ctx.moveTo((i*(w/tam))+(l-((l*i*2)/tam)),a)
+				ctx.lineTo((i*(w/tam))+(l-((l*i*2)/tam)),h-(a/2))
+			}
+			ctx.stroke()
+			/* fim desenha as linhas das coordenadas paralelas */
+
+			/* Desenha os titulos das linhas */
+			ctx.font = '12px Arial'
+			var txtArray = ['gameId']
+			var txtTopVal = ['']
+			var txtBottomVal = ['']
+			for(const [key, value] of Object.entries(stats['controls'])){
+				txtArray.push(key)
+				txtTopVal.push(stats['controls'][key]['max'])
+				txtBottomVal.push(stats['controls'][key]['min'])
+			}
+			txtArray.push('champion')
+			txtTopVal.push('')
+			txtBottomVal.push('')
+			for(var i=0;i<txtArray.length;i++){
+				var txtW = ctx.measureText(txtArray[i].slice(0,10)).width
+				ctx.fillText(txtArray[i].slice(0,10),(i*(w/tam))+(l-((l*i*2)/tam)-(txtW/2)),(i%2 == 0)?12:32)
+				txtW = ctx.measureText(txtTopVal[i]).width
+				ctx.fillText(txtTopVal[i],(i*(w/tam))+(l-((l*i*2)/tam)-(txtW/2)),a-8)
+				txtW = ctx.measureText(txtBottomVal[i]).width
+				ctx.fillText(txtBottomVal[i],(i*(w/tam))+(l-((l*i*2)/tam)-(txtW/2)),h-8)
+			}		
+			/* Fim desenha os titulos das linhas */
+
+			var used_champions = []
+			for(const [idx, match] of Object.entries(data['matches'])){
+				if(!used_champions.includes(match['playerStats']['championId']))
+					used_champions.push(match['playerStats']['championId'])
+			}
+			console.log(used_champions)
+			/* Desenha as linhas */
+			ctx.lineWidth = 1
+			var altura_usavel = (h-(a/2))-a
+
+			for(var c=0;c<used_champions.length;c++){
+				console.log(c)
+				ctx.fillText("championId="+used_champions[c], w-l+2, 6+a+( altura_usavel*(c+1)/(used_champions.length+1)))
+			}
+			var n_matches = Object.keys(data['matches']).length
+			var i = 0
+			for(const [idx, match] of Object.entries(data['matches'])){
+				var txtW = ctx.measureText(match['gameCreation']).width
+				var initial_height = 12+a+(i*(altura_usavel/n_matches))
+				ctx.fillText(match['gameCreation'], l-txtW-2, initial_height)
+				ctx.beginPath()
+				ctx.strokeStyle = match['win'] ? 'green' : 'red'
+				ctx.moveTo(l, initial_height-6)
+				var j = 1
+				for(const [key, value] of Object.entries(stats['controls'])){
+					var posY = getY(stats['controls'], key, match['playerStats']['stats'])
+					ctx.lineTo((j*(w/tam))+(l-((l*j*2)/tam)), a+(posY*altura_usavel))
+					j++
+				}
+				var index = used_champions.indexOf(match['playerStats']['championId'])
+				ctx.lineTo(w-l,a+( altura_usavel*(index+1)/(used_champions.length+1)))
+				ctx.stroke()
+				i++
+			}
+			//ctx.fillText('blueTeam',w-l+2,6+a+( altura_usavel/4))
+			//ctx.fillText('redTeam',w-l+2,6+a+( altura_usavel*3/4))
+			console.log(stats,tam, txtArray)
+		}
+
+	</script>
+</body>
+</html>

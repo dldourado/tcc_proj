@@ -624,3 +624,42 @@ def create_player_stats():
 	}
 	with open('games_json_player/player%s.json'%summoner.summonerName, 'w') as outfile:  
 		json.dump(player_complete_info, outfile)
+
+
+def create_resumed_player_stats(id):
+	summoner = Summoner.objects.filter(accountId=id).first()
+	matches_bs = MatchBySummoner.objects.filter(summoner=summoner)
+	matches = Match.objects.filter(gameId__in=matches_bs.values_list('gameId'))
+	player_matches = []
+	for match in matches:
+		match_complete_info = create_resumed_stats_in_match(match)
+		if match_complete_info == None:
+			continue
+		m_info = {}
+		m_info['gameCreation'] = match.gameCreation
+		m_info['playerStats'] = {}
+		m_info['teamIsBlue'] = False
+		m_info['win']=False
+		for participant in match_complete_info['blueTeam']['participants']:
+			if participant['summonerName']==summoner.summonerName:
+				m_info['playerStats']=participant
+				m_info['teamIsBlue'] = True
+		for participant in match_complete_info['redTeam']['participants']:
+			if participant['summonerName']==summoner.summonerName:
+				m_info['playerStats']=participant
+
+		if m_info['teamIsBlue']:
+			m_info['win'] = True if match_complete_info['blueTeam']['teamStats']['win'] else False
+			m_info['alliedStats'] = match_complete_info['blueTeam']['totalStats']
+			m_info['oponentStats'] = match_complete_info['redTeam']['totalStats']
+		else:
+			m_info['win'] = True if match_complete_info['redTeam']['teamStats']['win'] else False
+			m_info['alliedStats'] = match_complete_info['redTeam']['totalStats']
+			m_info['oponentStats'] = match_complete_info['blueTeam']['totalStats']
+		player_matches.append(m_info)
+
+	player_complete_info = {
+		'summonerName':summoner.summonerName,
+		'matches':player_matches
+	}
+	return player_complete_info
