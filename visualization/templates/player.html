@@ -4,17 +4,31 @@
 	<title>Visualization</title>
 </head>
 <body>
+	<div>
+		<center>
+			<select id="playerAccountId">
+				{% for player in players %}
+					<option value="{{player.accountId}}">{{player.summonerName}}</option>
+				{% endfor %}
+			</select>
+			<button type="submit" name="go" onclick="loadDoc()">Visualizar Partidas</button>
+		</center>
+	</div>
 	<canvas id="matchCanvas"  width="1200" height="600" style="position: absolute;"></canvas>
 	<script type="text/javascript">
+		var dados = null;
 		function loadDoc() {
 			var xhttp = new XMLHttpRequest();
 			xhttp.onreadystatechange = function() {
 				if (this.readyState == 4 && this.status == 200) {
 				//console.log(this.responseText);
-				init(JSON.parse(this.responseText).data)
+				dados = JSON.parse(this.responseText).data
+				init(dados)
 				}
 			};
-			xhttp.open("GET", "/get_player/?id="+"A2p_eMneZwEcxEYKtI1De_JsuuEFf1KMM6TS_y5qAHo", true);
+			var e = document.getElementById("playerAccountId");
+			var strUser = e.options[e.selectedIndex].value;
+			xhttp.open("GET", "/get_player/?id="+strUser, true);
 			xhttp.send();
 		}
 		function getY(stats, key, player){
@@ -22,7 +36,6 @@
 			var playerDifference = player[key]-stats[key]['min']
 			return (1-(playerDifference/statDifference))
 		}
-		loadDoc()
 		var display = document.getElementById("matchCanvas");
 		var w = display.offsetWidth;
 		var l = w/10;
@@ -47,11 +60,14 @@
 				{'summonerName':'summoner10', 'summonerStats': {'damage':116, 'defense':45, 'life':9}}
 			]
 		}
+		var mouseX = 0;
+		var mouseY = 0;
 		function init(data){
+			ctx.clearRect(0, 0, w, h);
 			let stats = {
 				'controls':{}
 			}
-			console.log(data)
+			//console.log(data)
 			for(const [idx, player] of Object.entries(data['matches'])){			
 				for(const [key, stat] of Object.entries(player['playerStats']['stats'])){				
 					if(key in stats['controls']){
@@ -86,7 +102,7 @@
 
 			/* Desenha os titulos das linhas */
 			ctx.font = '12px Arial'
-			var txtArray = ['gameId']
+			var txtArray = ['gameCreation']
 			var txtTopVal = ['']
 			var txtBottomVal = ['']
 			for(const [key, value] of Object.entries(stats['controls'])){
@@ -112,13 +128,13 @@
 				if(!used_champions.includes(match['playerStats']['championId']))
 					used_champions.push(match['playerStats']['championId'])
 			}
-			console.log(used_champions)
+			//console.log(used_champions)
 			/* Desenha as linhas */
 			ctx.lineWidth = 1
 			var altura_usavel = (h-(a/2))-a
 
 			for(var c=0;c<used_champions.length;c++){
-				console.log(c)
+				//console.log(c)
 				ctx.fillText("championId="+used_champions[c], w-l+2, 6+a+( altura_usavel*(c+1)/(used_champions.length+1)))
 			}
 			var n_matches = Object.keys(data['matches']).length
@@ -128,7 +144,6 @@
 				var initial_height = 12+a+(i*(altura_usavel/n_matches))
 				ctx.fillText(match['gameCreation'], l-txtW-2, initial_height)
 				ctx.beginPath()
-				ctx.strokeStyle = match['win'] ? 'green' : 'red'
 				ctx.moveTo(l, initial_height-6)
 				var j = 1
 				for(const [key, value] of Object.entries(stats['controls'])){
@@ -138,14 +153,29 @@
 				}
 				var index = used_champions.indexOf(match['playerStats']['championId'])
 				ctx.lineTo(w-l,a+( altura_usavel*(index+1)/(used_champions.length+1)))
+				if(mouseX>l-txtW-2 && mouseX<l-txtW-2+txtW && mouseY>initial_height-12 && mouseY<initial_height){//ctx.isPointInPath(mouseX,mouseY)){
+					ctx.strokeStyle = match['win'] ? '#0F0F' : '#F00F'
+				}
+				else{
+					ctx.strokeStyle = match['win'] ? '#0F05' : '#F005'
+				}
 				ctx.stroke()
+
+        		ctx.closePath()
 				i++
 			}
 			//ctx.fillText('blueTeam',w-l+2,6+a+( altura_usavel/4))
 			//ctx.fillText('redTeam',w-l+2,6+a+( altura_usavel*3/4))
-			console.log(stats,tam, txtArray)
+			//console.log(stats,tam, txtArray)
 		}
+		display.addEventListener("mousemove", function(e){
+			if(dados)
+				init(dados)
+			mouseX = e.offsetX
+			mouseY = e.offsetY
+		});
 
+		//loadDoc()
 	</script>
 </body>
 </html>

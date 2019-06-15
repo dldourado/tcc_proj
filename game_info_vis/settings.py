@@ -25,7 +25,7 @@ SECRET_KEY = '@^eyx6jx=dezf+xoo(b#9v@$e&mqw^jt9e2lu*xb8(arw%dsmo'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -123,5 +123,6 @@ STATIC_URL = '/static/'
 INSTALLED_APPS += [
     'summoner',
     'matches',
+    'champion',
     'visualization'
 ]
