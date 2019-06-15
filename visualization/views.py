@@ -3,6 +3,7 @@ from django.http import JsonResponse
 from matches.models import Match
 from summoner.models import Summoner
 from matches.utils import create_resumed_stats_in_match, create_resumed_player_stats
+from django.conf import settings
 
 # Create your views here.
 def index(request):
@@ -12,6 +13,7 @@ def match(request):
 	return render(request, 'match.html', locals())
 
 def player(request):
+	st_url = settings.STATIC_URL
 	players = Summoner.objects.all().order_by('-leaguePoints')
 	return render(request, 'player.html', locals())
 

@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html>
 <head>
@@ -16,13 +17,34 @@
 	</div>
 	<canvas id="matchCanvas"  width="1200" height="600" style="position: absolute;"></canvas>
 	<script type="text/javascript">
+		var static_url = '{{st_url}}'
 		var dados = null;
+		var img_list
+		var used_champions
+		function init_img(data){			
+			used_champions = []
+			for(const [idx, match] of Object.entries(data['matches'])){
+				if(!used_champions.includes(match['playerStats']['championId']))
+					used_champions.push(match['playerStats']['championId'])
+			}
+			img_list = {}
+			for(var i=0;i<used_champions.length;i++){
+				img_list[used_champions[i]] = new Image()
+				img_list[used_champions[i]].src = static_url+'champion/'+used_champions[i]+'.png';
+				img_list[used_champions[i]].title = 'championId'+used_champions[i];
+				img_list[used_champions[i]].onload = function() {
+					init(dados)
+				}
+			}
+			console.log(img_list)
+		}
 		function loadDoc() {
 			var xhttp = new XMLHttpRequest();
 			xhttp.onreadystatechange = function() {
 				if (this.readyState == 4 && this.status == 200) {
 				//console.log(this.responseText);
 				dados = JSON.parse(this.responseText).data
+				init_img(dados)
 				init(dados)
 				}
 			};
@@ -44,7 +66,7 @@
 
 		var ctx = display.getContext("2d");
 
-		var data = {
+		/*var data = {
 			'blueTeam': [
 				{'summonerName':'summoner1', 'summonerStats': {'damage':100, 'defense':20, 'life':1}},
 				{'summonerName':'summoner2', 'summonerStats': {'damage':200, 'defense':30, 'life':2}},
@@ -59,7 +81,7 @@
 				{'summonerName':'summoner9', 'summonerStats': {'damage':45,  'defense':11, 'life':8}},
 				{'summonerName':'summoner10', 'summonerStats': {'damage':116, 'defense':45, 'life':9}}
 			]
-		}
+		}*/
 		var mouseX = 0;
 		var mouseY = 0;
 		function init(data){
@@ -123,19 +145,26 @@
 			}		
 			/* Fim desenha os titulos das linhas */
 
-			var used_champions = []
-			for(const [idx, match] of Object.entries(data['matches'])){
-				if(!used_champions.includes(match['playerStats']['championId']))
-					used_champions.push(match['playerStats']['championId'])
-			}
 			//console.log(used_champions)
 			/* Desenha as linhas */
 			ctx.lineWidth = 1
 			var altura_usavel = (h-(a/2))-a
-
+			var max_img_h=altura_usavel/used_champions.length
+			if( max_img_h>48){
+				max_img_h=48
+			}
 			for(var c=0;c<used_champions.length;c++){
 				//console.log(c)
-				ctx.fillText("championId="+used_champions[c], w-l+2, 6+a+( altura_usavel*(c+1)/(used_champions.length+1)))
+				ctx.fillText("Id="+used_champions[c], w-l+52, 6+a+( altura_usavel*(c+1)/(used_champions.length+1)))
+				/*
+				var img = new Image();
+				img.src = static_url+'champion/'+used_champions[c]+'.png';
+				img.onload = function() {
+					ctx.drawImage(img, w-l+2, 6+a+( altura_usavel*(c+1)/(used_champions.length+1)), 12, 12);
+					console.log(img)
+				};*/
+				ctx.drawImage(img_list[used_champions[c]], w-l+2, a-(max_img_h/2)+( altura_usavel*(c+1)/(used_champions.length+1)), max_img_h, max_img_h);
+
 			}
 			var n_matches = Object.keys(data['matches']).length
 			var i = 0

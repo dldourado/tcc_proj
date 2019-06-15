@@ -24,7 +24,7 @@ def get_champions_icons():
 			name = re.findall('title=".*square.*.png"',r.text)[0].split('"')[1]
 			r = requests.get('http://raw.communitydragon.org/latest/game/assets/characters/%s/hud/%s'%(champion.nameId.lower(),name), stream=True)
 			if r.status_code == 200:
-			    with open('champion/images/%s.png'%champion.championId, 'wb') as f:
+			    with open('champion/static/champion/%s.png'%champion.championId, 'wb') as f:
 			        r.raw.decode_content = True
 			        shutil.copyfileobj(r.raw, f)
 
