@@ -17,6 +17,7 @@
 	</div>
 	<canvas id="matchCanvas"  width="1200" height="600" style="position: absolute;"></canvas>
 	<script type="text/javascript">
+		//ssh -o ServerAliveInterval=240 -R gamevis.serveo.net:80:127.0.0.1:8000 serveo.net
 		var static_url = '{{st_url}}'
 		var dados = null;
 		var img_list
@@ -36,7 +37,7 @@
 					init(dados)
 				}
 			}
-			console.log(img_list)
+			//console.log(img_list)
 		}
 		function loadDoc() {
 			var xhttp = new XMLHttpRequest();
@@ -66,24 +67,56 @@
 
 		var ctx = display.getContext("2d");
 
-		/*var data = {
-			'blueTeam': [
-				{'summonerName':'summoner1', 'summonerStats': {'damage':100, 'defense':20, 'life':1}},
-				{'summonerName':'summoner2', 'summonerStats': {'damage':200, 'defense':30, 'life':2}},
-				{'summonerName':'summoner3', 'summonerStats': {'damage':300, 'defense':30, 'life':3}},
-				{'summonerName':'summoner4', 'summonerStats': {'damage':50,  'defense':10, 'life':4}},
-				{'summonerName':'summoner5', 'summonerStats': {'damage':156, 'defense':25, 'life':5}}
-			],
-			'redTeam': [
-				{'summonerName':'summoner6', 'summonerStats': {'damage':110, 'defense':24, 'life':1}},
-				{'summonerName':'summoner7', 'summonerStats': {'damage':210, 'defense':36, 'life':6}},
-				{'summonerName':'summoner8', 'summonerStats': {'damage':310, 'defense':32, 'life':7}},
-				{'summonerName':'summoner9', 'summonerStats': {'damage':45,  'defense':11, 'life':8}},
-				{'summonerName':'summoner10', 'summonerStats': {'damage':116, 'defense':45, 'life':9}}
-			]
-		}*/
 		var mouseX = 0;
 		var mouseY = 0;
+		var zoneP1 = {
+			'x' : -1,
+			'y' : -1,
+		}
+		var zoneP2 = {
+			'x' : -1,
+			'y' : -1,
+		}
+		var mouse_down = false
+
+		var selectedZone = {}
+		function drawRetangle(p1, p2){
+			if(p1['x']<p2['x']){
+				selectedZone['x'] = p1['x']
+				selectedZone['w'] = p2['x']-p1['x']
+			}
+			else{
+				selectedZone['x'] = p2['x']
+				selectedZone['w'] = p1['x']-p2['x']
+			}
+			if(p1['y']<p2['y']){
+				selectedZone['y'] = p1['y']
+				selectedZone['h'] = p2['y']-p1['y']
+			}
+			else{
+				selectedZone['y'] = p2['y']
+				selectedZone['h'] = p1['y']-p2['y']
+			}
+
+			ctx.beginPath();
+			ctx.lineWidth = 1;
+			ctx.strokeStyle = "blue";
+			ctx.setLineDash([3, 3]);
+			//ctx.fillStyle = "#F00";
+			ctx.rect(selectedZone['x'], selectedZone['y'], selectedZone['w'], selectedZone['h']); 
+			ctx.stroke();
+			
+			ctx.fillStyle = 'black'
+			ctx.setLineDash([]);
+
+		}
+		function isInRetangle(x,y){
+			if(x>=selectedZone['x'] && x<=(selectedZone['x']+selectedZone['w']) && y>=selectedZone['y'] && y<=(selectedZone['y']+selectedZone['h'])){
+				//console.log(x,y,selectedZone['x'],selectedZone['y'],selectedZone['x']+selectedZone['w'],selectedZone['y']+selectedZone['h'])
+				return true
+			}
+			return false
+		}
 		function init(data){
 			ctx.clearRect(0, 0, w, h);
 			let stats = {
@@ -166,6 +199,8 @@
 				ctx.drawImage(img_list[used_champions[c]], w-l+2, a-(max_img_h/2)+( altura_usavel*(c+1)/(used_champions.length+1)), max_img_h, max_img_h);
 
 			}
+			drawRetangle(zoneP1, zoneP2)
+
 			var n_matches = Object.keys(data['matches']).length
 			var i = 0
 			for(const [idx, match] of Object.entries(data['matches'])){
@@ -174,19 +209,27 @@
 				ctx.fillText(match['gameCreation'], l-txtW-2, initial_height)
 				ctx.beginPath()
 				ctx.moveTo(l, initial_height-6)
+				ctx.strokeStyle = match['win'] ? '#0F05' : '#F005'
 				var j = 1
+				var crossPath = false
+				if(isInRetangle(l, initial_height-6)){
+					crossPath = true
+				}
 				for(const [key, value] of Object.entries(stats['controls'])){
 					var posY = getY(stats['controls'], key, match['playerStats']['stats'])
 					ctx.lineTo((j*(w/tam))+(l-((l*j*2)/tam)), a+(posY*altura_usavel))
+					if(isInRetangle((j*(w/tam))+(l-((l*j*2)/tam)), a+(posY*altura_usavel))){
+						crossPath = true
+					}
 					j++
 				}
 				var index = used_champions.indexOf(match['playerStats']['championId'])
 				ctx.lineTo(w-l,a+( altura_usavel*(index+1)/(used_champions.length+1)))
-				if(mouseX>l-txtW-2 && mouseX<l-txtW-2+txtW && mouseY>initial_height-12 && mouseY<initial_height){//ctx.isPointInPath(mouseX,mouseY)){
-					ctx.strokeStyle = match['win'] ? '#0F0F' : '#F00F'
+				if(isInRetangle(w-l,a+( altura_usavel*(index+1)/(used_champions.length+1)))){
+					crossPath = true
 				}
-				else{
-					ctx.strokeStyle = match['win'] ? '#0F05' : '#F005'
+				if((crossPath)||(mouseX>l-txtW-2 && mouseX<l-txtW-2+txtW && mouseY>initial_height-12 && mouseY<initial_height)){//ctx.isPointInPath(mouseX,mouseY)){
+					ctx.strokeStyle = match['win'] ? '#0F0F' : '#F00F'
 				}
 				ctx.stroke()
 
@@ -202,6 +245,21 @@
 				init(dados)
 			mouseX = e.offsetX
 			mouseY = e.offsetY
+			//console.log('m',mouseX, mouseY)
+			if(mouse_down){
+				zoneP2['x'] = e.offsetX
+				zoneP2['y'] = e.offsetY
+			}
+		});
+		display.addEventListener("mousedown", function(e){
+			zoneP1['x'] = e.offsetX
+			zoneP1['y'] = e.offsetY
+			mouse_down = true;
+		});
+		display.addEventListener("mouseup", function(e){
+			mouse_down = false
+			if(dados)
+				init(dados)
 		});
 
 		//loadDoc()
