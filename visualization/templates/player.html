@@ -16,13 +16,14 @@
 		</center>
 	</div>
 	<canvas id="matchCanvas"  width="1200" height="600" style="position: absolute;"></canvas>
+
 	<script type="text/javascript">
 		//ssh -o ServerAliveInterval=240 -R gamevis.serveo.net:80:127.0.0.1:8000 serveo.net
 		var static_url = '{{st_url}}'
 		var dados = null;
 		var img_list
 		var used_champions
-		function init_img(data){			
+		function init_img(data){
 			used_champions = []
 			for(const [idx, match] of Object.entries(data['matches'])){
 				if(!used_champions.includes(match['playerStats']['championId']))
@@ -39,6 +40,52 @@
 			}
 			//console.log(img_list)
 		}
+
+		let stats = {
+			'controls':{}
+		}
+		function init_attributes(data){
+			for(const [idx, player] of Object.entries(data['matches'])){
+				let order = 0				
+				for(const [key, stat] of Object.entries(player['playerStats']['stats'])){	
+
+					if(key in stats['controls']){
+						if(stat<stats['controls'][key]['min']){
+							stats['controls'][key]['min']=stat
+						}
+						if(stat>stats['controls'][key]['max']){
+							stats['controls'][key]['max'] = stat
+						}
+
+
+					}
+					else{
+						stats['controls'][key] = {}
+						stats['controls'][key]['min'] = stat
+						stats['controls'][key]['max'] = stat
+
+						stats['controls'][key]['inverted'] = false
+						stats['controls'][key]['hidden'] = false
+						stats['controls'][key]['order'] = order
+
+						order++
+					}
+				}
+			}
+			/*var tam = Object.keys(stats['controls']).length+1	
+
+			let idx_arrow = 0	
+			for(const [key, value] of Object.entries(stats['controls'])){
+				idx_arrow++
+				stat_control_button.push({
+					'idx':idx_arrow,
+					'x':(idx_arrow*(w/tam))+(l-4-((l*idx_arrow*2)/tam)),
+					'y':h-(a/2),
+					'x2':(idx_arrow*(w/tam))+(l+4-((l*idx_arrow*2)/tam)),
+					'y2':h-(a/2)+9
+				})
+			}*/
+		}
 		function loadDoc() {
 			var xhttp = new XMLHttpRequest();
 			xhttp.onreadystatechange = function() {
@@ -46,6 +93,7 @@
 				//console.log(this.responseText);
 				dados = JSON.parse(this.responseText).data
 				init_img(dados)
+				init_attributes(dados)
 				init(dados)
 				}
 			};
@@ -57,7 +105,46 @@
 		function getY(stats, key, player){
 			var statDifference = stats[key]['max']-stats[key]['min']
 			var playerDifference = player[key]-stats[key]['min']
+			if(stats[key]['inverted'])
+				return (playerDifference/statDifference)
 			return (1-(playerDifference/statDifference))
+		}
+		function reorder(){
+			var temp = {}
+			while(Object.keys(stats['controls']).length>0){
+				let menor = 9999
+				for(const [key, value] of Object.entries(stats['controls'])){
+					if(stats['controls'][key]['order']<menor)
+						menor = stats['controls'][key]['order']
+				}
+				for(const [key, value] of Object.entries(stats['controls'])){
+					if(stats['controls'][key]['order']==menor){
+						temp[key] = stats['controls'][key]
+						delete stats['controls'][key]
+					}
+				}
+
+			}
+			stats['controls'] = temp
+		}
+		function decreaseOrder(stat){
+			let last_active = -1
+			for(const [key, value] of Object.entries(stats['controls'])){
+				if(stats['controls'][key]==stat)
+					break
+				if(!stats['controls'][key]['hidden'])
+					last_active=stats['controls'][key]['order']
+			}
+			if(last_active==-1)
+				return
+			for(const [key, value] of Object.entries(stats['controls'])){
+				if(stats['controls'][key]==stat)
+					break
+				stats['controls'][key]['order']++
+			}
+			//console.log(stat['order'],last_active)
+			stat['order']=last_active
+			reorder()
 		}
 		var display = document.getElementById("matchCanvas");
 		var w = display.offsetWidth;
@@ -80,6 +167,7 @@
 		var mouse_down = false
 
 		var selectedZone = {}
+		var areaSelected = false
 		function drawRetangle(p1, p2){
 			if(p1['x']<p2['x']){
 				selectedZone['x'] = p1['x']
@@ -104,6 +192,10 @@
 			ctx.setLineDash([3, 3]);
 			//ctx.fillStyle = "#F00";
 			ctx.rect(selectedZone['x'], selectedZone['y'], selectedZone['w'], selectedZone['h']); 
+			if(selectedZone['w']==0&&selectedZone['h']==0)
+				areaSelected = false
+			else
+				areaSelected = true
 			ctx.stroke();
 			
 			ctx.fillStyle = 'black'
@@ -117,9 +209,10 @@
 			}
 			return false
 		}
+		var stat_control_button = []
 		function init(data){
 			ctx.clearRect(0, 0, w, h);
-			let stats = {
+			/*stats = {
 				'controls':{}
 			}
 			//console.log(data)
@@ -140,7 +233,7 @@
 						stats['controls'][key]['max'] = stat
 					}
 				}
-			}
+			}*/
 			var tam = Object.keys(stats['controls']).length+1
 
 			/* Desenha as linhas das coordenadas paralelas */
@@ -153,28 +246,68 @@
 				ctx.lineTo((i*(w/tam))+(l-((l*i*2)/tam)),h-(a/2))
 			}
 			ctx.stroke()
+
 			/* fim desenha as linhas das coordenadas paralelas */
+			var idx_arrow = 1
+			for(const [key, value] of Object.entries(stats['controls'])){
+				if(stats['controls'][key]['inverted']){
+					ctx.moveTo((idx_arrow*(w/tam))+(l-4-((l*idx_arrow*2)/tam)),h-(a/2)+9)
+					ctx.lineTo((idx_arrow*(w/tam))+(l+4-((l*idx_arrow*2)/tam)),h-(a/2)+9)
+					ctx.lineTo((idx_arrow*(w/tam))+(l-((l*idx_arrow*2)/tam)),h-(a/2))
+					ctx.lineTo((idx_arrow*(w/tam))+(l-4-((l*idx_arrow*2)/tam)),h-(a/2)+9)
+				}
+				else{
+					ctx.moveTo((idx_arrow*(w/tam))+(l-4-((l*idx_arrow*2)/tam)),h-(a/2))
+					ctx.lineTo((idx_arrow*(w/tam))+(l+4-((l*idx_arrow*2)/tam)),h-(a/2))
+					ctx.lineTo((idx_arrow*(w/tam))+(l-((l*idx_arrow*2)/tam)),h-(a/2)+9)
+					ctx.lineTo((idx_arrow*(w/tam))+(l-4-((l*idx_arrow*2)/tam)),h-(a/2))					
+				}
+				if(idx_arrow>1){
+					ctx.moveTo((idx_arrow*(w/tam))+(l-7-((l*idx_arrow*2)/tam)),h-(a/2))
+					ctx.lineTo((idx_arrow*(w/tam))+(l-7-((l*idx_arrow*2)/tam)),h-(a/2)+9)
+					ctx.lineTo((idx_arrow*(w/tam))+(l-12-((l*idx_arrow*2)/tam)),h-(a/2)+5)
+					ctx.lineTo((idx_arrow*(w/tam))+(l-7-((l*idx_arrow*2)/tam)),h-(a/2))	
+				}
+
+				if(idx_arrow<tam-1){
+					ctx.moveTo((idx_arrow*(w/tam))+(l+7-((l*idx_arrow*2)/tam)),h-(a/2))
+					ctx.lineTo((idx_arrow*(w/tam))+(l+7-((l*idx_arrow*2)/tam)),h-(a/2)+9)
+					ctx.lineTo((idx_arrow*(w/tam))+(l+12-((l*idx_arrow*2)/tam)),h-(a/2)+5)
+					ctx.lineTo((idx_arrow*(w/tam))+(l+7-((l*idx_arrow*2)/tam)),h-(a/2))	
+				}
+				stats['controls'][key]['control_keys'] = {
+					'x':(idx_arrow*(w/tam))+(l-4-((l*idx_arrow*2)/tam)),
+					'y':h-(a/2),
+					'x2':(idx_arrow*(w/tam))+(l+4-((l*idx_arrow*2)/tam)),
+					'y2':h-(a/2)+9
+				}
+				idx_arrow++
+			}
+			ctx.stroke()
 
 			/* Desenha os titulos das linhas */
 			ctx.font = '12px Arial'
 			var txtArray = ['gameCreation']
 			var txtTopVal = ['']
 			var txtBottomVal = ['']
+			var txtInvertVal = [false]
 			for(const [key, value] of Object.entries(stats['controls'])){
 				txtArray.push(key)
 				txtTopVal.push(stats['controls'][key]['max'])
 				txtBottomVal.push(stats['controls'][key]['min'])
+				txtInvertVal.push(stats['controls'][key]['inverted'])
 			}
 			txtArray.push('champion')
 			txtTopVal.push('')
 			txtBottomVal.push('')
+			txtInvertVal.push(false)
 			for(var i=0;i<txtArray.length;i++){
 				var txtW = ctx.measureText(txtArray[i].slice(0,10)).width
 				ctx.fillText(txtArray[i].slice(0,10),(i*(w/tam))+(l-((l*i*2)/tam)-(txtW/2)),(i%2 == 0)?12:32)
 				txtW = ctx.measureText(txtTopVal[i]).width
-				ctx.fillText(txtTopVal[i],(i*(w/tam))+(l-((l*i*2)/tam)-(txtW/2)),a-8)
+				ctx.fillText(txtTopVal[i],(i*(w/tam))+(l-((l*i*2)/tam)-(txtW/2)), txtInvertVal[i] ? (h-8) : (a-8))
 				txtW = ctx.measureText(txtBottomVal[i]).width
-				ctx.fillText(txtBottomVal[i],(i*(w/tam))+(l-((l*i*2)/tam)-(txtW/2)),h-8)
+				ctx.fillText(txtBottomVal[i],(i*(w/tam))+(l-((l*i*2)/tam)-(txtW/2)), txtInvertVal[i] ? (a-8) : (h-8))
 			}		
 			/* Fim desenha os titulos das linhas */
 
@@ -209,7 +342,11 @@
 				ctx.fillText(match['gameCreation'], l-txtW-2, initial_height)
 				ctx.beginPath()
 				ctx.moveTo(l, initial_height-6)
-				ctx.strokeStyle = match['win'] ? '#0F05' : '#F005'
+				if(!areaSelected)
+					ctx.strokeStyle = match['win'] ? '#0F05' : '#F005'
+				else
+					ctx.strokeStyle = match['win'] ? '#0F03' : '#F003'
+
 				var j = 1
 				var crossPath = false
 				if(isInRetangle(l, initial_height-6)){
@@ -252,12 +389,30 @@
 			}
 		});
 		display.addEventListener("mousedown", function(e){
-			zoneP1['x'] = e.offsetX
-			zoneP1['y'] = e.offsetY
-			mouse_down = true;
+			if((e.offsetX>l)&&(e.offsetX<w-l)&&(e.offsetY>a)&&(e.offsetY<h-(a/2))){
+				zoneP1['x'] = e.offsetX
+				zoneP1['y'] = e.offsetY
+				mouse_down = true;
+			}
+			else{
+				for(const [key, value] of Object.entries(stats['controls'])){
+					//console.log(stat_control_button[i])
+					if( (e.offsetX>=stats['controls'][key]['control_keys']['x']) && (e.offsetX<=stats['controls'][key]['control_keys']['x2']) && (e.offsetY>=stats['controls'][key]['control_keys']['y']) && (e.offsetY<=stats['controls'][key]['control_keys']['y2']) ){
+						//console.log(stats['controls'][key]['control_keys']['idx'])
+						stats['controls'][key]['inverted'] = !stats['controls'][key]['inverted']
+					}
+					else if( (e.offsetX>=stats['controls'][key]['control_keys']['x']-8) && (e.offsetX<=stats['controls'][key]['control_keys']['x2']-3) && (e.offsetY>=stats['controls'][key]['control_keys']['y']) && (e.offsetY<=stats['controls'][key]['control_keys']['y2']) ){
+						decreaseOrder(stats['controls'][key])
+						//stats['controls'][key]['inverted'] = !stats['controls'][key]['inverted']
+					}
+				}
+				//console.log(stat_control_button)
+				//console.log(e.offsetX,e.offsetY)
+			}
 		});
 		display.addEventListener("mouseup", function(e){
 			mouse_down = false
+			//e.preventDefault()
 			if(dados)
 				init(dados)
 		});
