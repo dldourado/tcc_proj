@@ -13,6 +13,7 @@
 				{% endfor %}
 			</select>
 			<button type="submit" name="go" onclick="loadDoc()">Visualizar Partidas</button>
+			<label>Mostrar valores intermediários:<input type="checkbox" id="show-value" onchange="showVal()"></label>
 		</center>
 	</div>
 	<canvas id="matchCanvas"  width="1200" height="600" style="position: absolute;"></canvas>
@@ -86,12 +87,16 @@
 				})
 			}*/
 		}
+
 		function loadDoc() {
 			var xhttp = new XMLHttpRequest();
 			xhttp.onreadystatechange = function() {
 				if (this.readyState == 4 && this.status == 200) {
 				//console.log(this.responseText);
 				dados = JSON.parse(this.responseText).data
+				stats = {
+					'controls':{}
+				}
 				init_img(dados)
 				init_attributes(dados)
 				init(dados)
@@ -140,10 +145,29 @@
 			for(const [key, value] of Object.entries(stats['controls'])){
 				if(stats['controls'][key]==stat)
 					break
-				stats['controls'][key]['order']++
+				if(stats['controls'][key]['order']>=last_active)
+					stats['controls'][key]['order']++
 			}
 			//console.log(stat['order'],last_active)
 			stat['order']=last_active
+			reorder()
+		}
+		function increaseOrder(stat){
+			let first_active = -1
+			for(const [key, value] of Object.entries(stats['controls'])){
+				if((!stats['controls'][key]['hidden']) && stats['controls'][key]['order']>stat['order']){
+					first_active=stats['controls'][key]['order']
+					break
+				}
+			}
+			if(first_active==-1)
+				return
+			for(const [key, value] of Object.entries(stats['controls'])){
+				if(stats['controls'][key]['order']<=first_active && stats['controls'][key]['order']>stat['order'] )
+					stats['controls'][key]['order']--
+			}
+			//console.log(stat['order'],first_active)
+			stat['order']=first_active
 			reorder()
 		}
 		var display = document.getElementById("matchCanvas");
@@ -168,6 +192,7 @@
 
 		var selectedZone = {}
 		var areaSelected = false
+		var showValues = false
 		function drawRetangle(p1, p2){
 			if(p1['x']<p2['x']){
 				selectedZone['x'] = p1['x']
@@ -286,6 +311,7 @@
 			ctx.stroke()
 
 			/* Desenha os titulos das linhas */
+			var altura_usavel = (h-(a/2))-a
 			ctx.font = '12px Arial'
 			var txtArray = ['gameCreation']
 			var txtTopVal = ['']
@@ -308,13 +334,26 @@
 				ctx.fillText(txtTopVal[i],(i*(w/tam))+(l-((l*i*2)/tam)-(txtW/2)), txtInvertVal[i] ? (h-8) : (a-8))
 				txtW = ctx.measureText(txtBottomVal[i]).width
 				ctx.fillText(txtBottomVal[i],(i*(w/tam))+(l-((l*i*2)/tam)-(txtW/2)), txtInvertVal[i] ? (a-8) : (h-8))
+				if(i!=0 && i!=(txtArray.length-1) && showValues){
+					ctx.font = '10px Arial'
+					for(var j=1;j<10;j++){
+						var tDif = txtTopVal[i]-txtBottomVal[i]
+						var tVal = parseInt(((tDif/10)*j)+txtBottomVal[i])
+						txtW = ctx.measureText(tVal+'-').width
+						ctx.fillText(
+							tVal+'-',
+							(i*(w/tam))+(l-((l*i*2)/tam)-txtW-1), 
+							txtInvertVal[i] ? ((j*(altura_usavel/10))+a) : ((10-j)*(altura_usavel/10))+a
+						)
+					}
+					ctx.font = '12px Arial'
+				}
 			}		
 			/* Fim desenha os titulos das linhas */
 
 			//console.log(used_champions)
 			/* Desenha as linhas */
 			ctx.lineWidth = 1
-			var altura_usavel = (h-(a/2))-a
 			var max_img_h=altura_usavel/used_champions.length
 			if( max_img_h>48){
 				max_img_h=48
@@ -337,9 +376,11 @@
 			var n_matches = Object.keys(data['matches']).length
 			var i = 0
 			for(const [idx, match] of Object.entries(data['matches'])){
-				var txtW = ctx.measureText(match['gameCreation']).width
+				var time = new Date(parseInt(match['gameCreation']))
+				var timeTxt = time.getDate() + '/' + time.getMonth() + '/' + time.getFullYear()// + '-' + time.getHours() + ':' + time.getMinutes()
+				var txtW = ctx.measureText(timeTxt).width
 				var initial_height = 12+a+(i*(altura_usavel/n_matches))
-				ctx.fillText(match['gameCreation'], l-txtW-2, initial_height)
+				ctx.fillText(timeTxt, l-txtW-2, initial_height)
 				ctx.beginPath()
 				ctx.moveTo(l, initial_height-6)
 				if(!areaSelected)
@@ -401,8 +442,12 @@
 						//console.log(stats['controls'][key]['control_keys']['idx'])
 						stats['controls'][key]['inverted'] = !stats['controls'][key]['inverted']
 					}
-					else if( (e.offsetX>=stats['controls'][key]['control_keys']['x']-8) && (e.offsetX<=stats['controls'][key]['control_keys']['x2']-3) && (e.offsetY>=stats['controls'][key]['control_keys']['y']) && (e.offsetY<=stats['controls'][key]['control_keys']['y2']) ){
+					else if( (e.offsetX>=stats['controls'][key]['control_keys']['x']-8) && (e.offsetX<=stats['controls'][key]['control_keys']['x']-3) && (e.offsetY>=stats['controls'][key]['control_keys']['y']) && (e.offsetY<=stats['controls'][key]['control_keys']['y2']) ){
 						decreaseOrder(stats['controls'][key])
+						//stats['controls'][key]['inverted'] = !stats['controls'][key]['inverted']
+					}
+					else if( (e.offsetX>=stats['controls'][key]['control_keys']['x2']+3) && (e.offsetX<=stats['controls'][key]['control_keys']['x2']+8) && (e.offsetY>=stats['controls'][key]['control_keys']['y']) && (e.offsetY<=stats['controls'][key]['control_keys']['y2']) ){
+						increaseOrder(stats['controls'][key])
 						//stats['controls'][key]['inverted'] = !stats['controls'][key]['inverted']
 					}
 				}
@@ -416,6 +461,11 @@
 			if(dados)
 				init(dados)
 		});
+		function showVal(){
+			showValues = document.getElementById('show-value').checked
+			if(dados)
+				init(dados)
+		}
 
 		//loadDoc()
 	</script>
