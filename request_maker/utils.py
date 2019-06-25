@@ -4,7 +4,7 @@ from operator import itemgetter
 import time
 
 #initial_time = time.time()
-
+#https://br1.api.riotgames.com/lol/league/v4/challengerleagues/by-queue/RANKED_SOLO_5x5
 INITIAL_URL = 'https://'
 SERVER = 'br1'
 URL = '.api.riotgames.com/lol/'

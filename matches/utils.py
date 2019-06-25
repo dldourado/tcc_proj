@@ -537,25 +537,25 @@ def create_resumed_stats_in_match(match):
 		}		
 		statInMatch = StatsByParticipant.objects.filter(participant=participant_team).first()
 		s_part = {
-			'magicDamageDealtToChampions' : statInMatch.magicDamageDealtToChampions,
-			'magicDamageDealt' : statInMatch.magicDamageDealt,
-			'physicalDamageDealtToChampions' : statInMatch.physicalDamageDealtToChampions,
-			'physicalDamageDealt' : statInMatch.physicalDamageDealt,
-			'trueDamageDealt' : statInMatch.trueDamageDealt,
-			'trueDamageDealtToChampions' : statInMatch.trueDamageDealtToChampions,
-			'totalDamageDealt' : statInMatch.totalDamageDealt,
-			'totalDamageDealtToChampions' : statInMatch.totalDamageDealtToChampions,
-			'damageDealtToObjectives' : statInMatch.damageDealtToObjectives,
-			'damageDealtToTurrets' : statInMatch.damageDealtToTurrets,
-			'damageSelfMitigated' : statInMatch.damageSelfMitigated,
-			'magicalDamageTaken' : statInMatch.magicalDamageTaken,
-			'physicalDamageTaken' : statInMatch.physicalDamageTaken,
-			'trueDamageTaken' : statInMatch.trueDamageTaken,
-			'totalDamageTaken' : statInMatch.totalDamageTaken,
+			'mDDChampions' : statInMatch.magicDamageDealtToChampions,
+			'mDD' : statInMatch.magicDamageDealt,
+			'pDDChampions' : statInMatch.physicalDamageDealtToChampions,
+			'pDD' : statInMatch.physicalDamageDealt,
+			'tDD' : statInMatch.trueDamageDealt,
+			'tDDChampions' : statInMatch.trueDamageDealtToChampions,
+			'totalDD' : statInMatch.totalDamageDealt,
+			'totalDDChampions' : statInMatch.totalDamageDealtToChampions,
+			'dDObjectives' : statInMatch.damageDealtToObjectives,
+			'dDTurrets' : statInMatch.damageDealtToTurrets,
+			'dSelfMitigated' : statInMatch.damageSelfMitigated,
+			'mDTaken' : statInMatch.magicalDamageTaken,
+			'pDTaken' : statInMatch.physicalDamageTaken,
+			'tDTaken' : statInMatch.trueDamageTaken,
+			'totalDTaken' : statInMatch.totalDamageTaken,
 			'totalHeal' : statInMatch.totalHeal,
-			'timeCCingOthers' : statInMatch.timeCCingOthers,
-			'totalTimeCrowdControlDealt' : statInMatch.totalTimeCrowdControlDealt,
-			'longestTimeSpentLiving' : statInMatch.longestTimeSpentLiving,
+			'tCCingOthers' : statInMatch.timeCCingOthers,
+			'totalTCCDealt' : statInMatch.totalTimeCrowdControlDealt,
+			'lTSLiving' : statInMatch.longestTimeSpentLiving,
 			'champLevel' : statInMatch.champLevel,
 			'kills' : statInMatch.kills,
 			'deaths' : statInMatch.deaths,
@@ -567,8 +567,8 @@ def create_resumed_stats_in_match(match):
 			blueTeam['participants'].append(p_team)
 		else:
 			redTeam['participants'].append(p_team)
-	blueTeam['totalStats'] = stats_by_team(blueTeam)
-	redTeam['totalStats'] = stats_by_team(redTeam)
+	#blueTeam['totalStats'] = stats_by_team(blueTeam)
+	#redTeam['totalStats'] = stats_by_team(redTeam)
 
 	match_complete_info = {
 		'gameId' : match.gameId,
@@ -650,12 +650,12 @@ def create_resumed_player_stats(id):
 
 		if m_info['teamIsBlue']:
 			m_info['win'] = True if match_complete_info['blueTeam']['teamStats']['win'] else False
-			m_info['alliedStats'] = match_complete_info['blueTeam']['totalStats']
-			m_info['oponentStats'] = match_complete_info['redTeam']['totalStats']
+			#m_info['alliedStats'] = match_complete_info['blueTeam']['totalStats']
+			#m_info['oponentStats'] = match_complete_info['redTeam']['totalStats']
 		else:
 			m_info['win'] = True if match_complete_info['redTeam']['teamStats']['win'] else False
-			m_info['alliedStats'] = match_complete_info['redTeam']['totalStats']
-			m_info['oponentStats'] = match_complete_info['blueTeam']['totalStats']
+			#m_info['alliedStats'] = match_complete_info['redTeam']['totalStats']
+			#m_info['oponentStats'] = match_complete_info['blueTeam']['totalStats']
 		player_matches.append(m_info)
 
 	player_complete_info = {
