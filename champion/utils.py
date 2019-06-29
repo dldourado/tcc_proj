@@ -13,7 +13,8 @@ def get_champions():
 			Champion.objects.create(
 				name = value['name'],
 				nameId = value['id'],
-				championId = value['key']
+				championId = value['key'],
+				primaryTag = value['tags'][0]
 			)
 
 def get_champions_icons():

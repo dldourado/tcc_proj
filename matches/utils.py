@@ -663,3 +663,65 @@ def create_resumed_player_stats(id):
 		'matches':player_matches
 	}
 	return player_complete_info
+
+from champion.models import Champion
+from decimal import Decimal
+def generate_data():
+	data = {}
+	champions = Champion.objects.all()
+	tags = []
+	for champion in champions:
+		if champion.primaryTag not in tags:
+			tags.append(champion.primaryTag)
+		data[champion.championId] = {
+			'name' : champion.name,
+			'damageDealt' : 0,
+			'damageDealtChampions' : 0,
+			'damageTaken' : 0,
+			'kills' : 0,
+			'deaths' : 0,
+			'assists' : 0,
+			'totalCC' : 0,
+
+			'qtd' : 0,
+			'primaryTag' : tags.index(champion.primaryTag)+1
+		}
+	for key,value in data.items():
+		data[key]['qtd'] = StatsByParticipant.objects.filter(participant__championId=key).count()
+
+	participants_stats = StatsByParticipant.objects.all()
+	for participant_stat in participants_stats:
+		c_id = participant_stat.participant.championId
+		if c_id in data:
+			if data[c_id]['qtd']>0:
+				data[c_id]['damageDealt']+= participant_stat.totalDamageDealt/data[c_id]['qtd']
+				data[c_id]['damageDealtChampions']+= participant_stat.totalDamageDealtToChampions/data[c_id]['qtd']
+				data[c_id]['damageTaken']+=participant_stat.totalDamageTaken/data[c_id]['qtd']
+				data[c_id]['kills']+=participant_stat.kills/data[c_id]['qtd']
+				data[c_id]['deaths']+=participant_stat.deaths/data[c_id]['qtd']
+				data[c_id]['assists']+=participant_stat.assists/data[c_id]['qtd']
+				data[c_id]['totalCC']+=participant_stat.timeCCingOthers/data[c_id]['qtd']
+			else:
+				print(data[c_id]['name'])
+
+	import csv
+	print(tags)
+	with open('champions.data', mode='w') as champion_file:
+		w_csv = csv.writer(champion_file, delimiter=';')
+		w_csv.writerow(['damageDealt',
+						'damageDealtChampions',
+						'damageTaken',
+						'kills',
+						'deaths',
+						'assists',
+						'totalCC'])
+
+		for key,value in data.items():
+			ar = list()
+			for k,v in value.items():
+				if k == 'qtd':
+					continue
+				ar.append(v)
+			w_csv.writerow(ar)
+
+
