@@ -35,3 +35,7 @@ def get_player(request):
 		except Exception as e:
 			print(e)
 	return JsonResponse({'data':None})
+
+def get_network(request):
+	st_url = settings.STATIC_URL
+	return render(request, 'network-champions.html', locals())

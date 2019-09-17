@@ -6,4 +6,5 @@ urlpatterns = [
     path('player/',views.player, name='player'),
     path('get_match/',views.get_match, name='get_match'),
     path('get_player/',views.get_player, name='get_player'),
+    path('get_network/',views.get_network, name='get_network'),
 ]
