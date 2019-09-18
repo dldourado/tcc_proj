@@ -4,7 +4,7 @@ import requests
 import shutil
 import re
 def get_champions():
-	champion_list = make_request_endpoint('http://ddragon.leagueoflegends.com/cdn/9.3.1/data/en_US/champion.json', None)
+	champion_list = make_request_endpoint('http://ddragon.leagueoflegends.com/cdn/9.18.1/data/en_US/champion.json', None)
 	for champion in champion_list['data']:
 		value = champion_list['data'][champion]
 		try:

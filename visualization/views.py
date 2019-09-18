@@ -2,12 +2,12 @@ from django.shortcuts import render, redirect
 from django.http import JsonResponse
 from matches.models import Match
 from summoner.models import Summoner
-from matches.utils import create_resumed_stats_in_match, create_resumed_player_stats
+from matches.utils import create_resumed_stats_in_match, create_resumed_player_stats, generate_data
 from django.conf import settings
 
 # Create your views here.
 def index(request):
-	return redirect('/player')#render(request, 'index.html', locals())
+	return render(request, 'home.html', locals())
 
 def match(request):
 	return render(request, 'match.html', locals())
@@ -36,6 +36,7 @@ def get_player(request):
 			print(e)
 	return JsonResponse({'data':None})
 
-def get_network(request):
+def champions_network(request):
 	st_url = settings.STATIC_URL
+	dados = generate_data(False)
 	return render(request, 'network-champions.html', locals())

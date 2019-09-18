@@ -666,7 +666,7 @@ def create_resumed_player_stats(id):
 
 from champion.models import Champion
 from decimal import Decimal
-def generate_data():
+def generate_data(arq=True):
 	data = {}
 	champions = Champion.objects.all()
 	tags = []
@@ -703,25 +703,45 @@ def generate_data():
 				data[c_id]['totalCC']+=participant_stat.timeCCingOthers/data[c_id]['qtd']
 			else:
 				print(data[c_id]['name'])
+	if arq:
+		import csv
+		print(tags)
+		with open('champions.data', mode='w') as champion_file:
+			w_csv = csv.writer(champion_file, delimiter=';')
+			w_csv.writerow(['damageDealt',
+							'damageDealtChampions',
+							'damageTaken',
+							'kills',
+							'deaths',
+							'assists',
+							'totalCC'])
 
-	import csv
-	print(tags)
-	with open('champions.data', mode='w') as champion_file:
-		w_csv = csv.writer(champion_file, delimiter=';')
-		w_csv.writerow(['damageDealt',
-						'damageDealtChampions',
-						'damageTaken',
-						'kills',
-						'deaths',
-						'assists',
-						'totalCC'])
+			for key,value in data.items():
+				ar = list()
+				for k,v in value.items():
+					if k == 'qtd':
+						continue
+					ar.append(v)
+				w_csv.writerow(ar)
+	else:
+		network_data = {
+			'nodes': [
+				{
+					'name':'League of Legends',
+					'nodeType':0#tipo base, raiz
+				}
+			],
+			'links': [],
+		}
+		for champ_t in tags:
+			network_data['nodes'].append(
+				{
+					'name':champ_t,
+					'nodeType':1
+				}
+			)
+			
+		print(network_data)
 
-		for key,value in data.items():
-			ar = list()
-			for k,v in value.items():
-				if k == 'qtd':
-					continue
-				ar.append(v)
-			w_csv.writerow(ar)
 
 
