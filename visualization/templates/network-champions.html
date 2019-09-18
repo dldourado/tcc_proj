@@ -10,108 +10,18 @@
 	<div id="data-vis"></div>
 	<script type="text/javascript">
 		function color(d){
-			if(d.nodeType=='c')
-				return "#ff0000"
-			if(d.nodeType=='n')
+			if(d.nodeType==0)
 				return "#000000"
-			if(d.nodeType=='d')
+			if(d.nodeType==1)
+				return "#ff0000"
+			if(d.nodeType==2)
 				return "#00ff00"
-			if(d.nodeType=='r')
+			if(d.nodeType==3)
 				return "#0000ff"
 						
 			return "#69b3a2"
 		}
-		var data = {
-			'nodes':[
-				{
-					'id':0,
-					'name':'Shaco',
-					'nodeType':'c'
-
-				},
-				{
-					'id':1,
-					'name':'Sivir',
-					'nodeType':'c'
-				},
-				{
-					'id':2,
-					'name':'Twitch',
-					'nodeType':'c'
-				},
-				{
-					'id':3,
-					'name':'Marksman',
-					'nodeType':'r'
-				},
-				{
-					'id':4,
-					'name':'Assassin',
-					'nodeType':'r'
-				},
-				{
-					'id':5,
-					'name':'DamageDealt',
-					'nodeType':'d',
-					'value':123
-
-				},
-				{
-					'id':6,
-					'name':'DamageDealt',
-					'nodeType':'d',
-					'value':134
-				},
-				{
-					'id':7,
-					'name':'DamageDealt',
-					'nodeType':'d',
-					'value':156
-				},
-				{
-					'id':8,
-					'name':'League of Legends',
-					'nodeType':'n'
-
-				},
-			],
-			'links':[
-
-				{
-					'source':8,
-					'target':3
-				},
-				{
-					'source':8,
-					'target':4
-				},
-				{
-					'source':3,
-					'target':1
-				},
-				{
-					'source':3,
-					'target':2
-				},
-				{
-					'source':4,
-					'target':0
-				},
-				{
-					'source':0,
-					'target':5
-				},
-				{
-					'source':1,
-					'target':6
-				},
-				{
-					'source':2,
-					'target':7
-				},
-
-			]
-		}
+		var data = {{dados|safe}};
 		// set the dimensions and margins of the graph
 		var margin = {top: 10, right: 10, bottom: 10, left: 10},
 		  width = 1200 - margin.left - margin.right,
@@ -122,6 +32,9 @@
 		.append("svg")
 		  .attr("width", width + margin.left + margin.right)
 		  .attr("height", height + margin.top + margin.bottom)
+		  .call(d3.zoom().on("zoom", function () {
+			svg.attr("transform", d3.event.transform)
+			}))
 		// .append("g")
 		//   .attr("transform",
 		//         "translate(" + margin.left + "," + margin.top + ")");

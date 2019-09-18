@@ -727,21 +727,59 @@ def generate_data(arq=True):
 		network_data = {
 			'nodes': [
 				{
+					'id':0,
 					'name':'League of Legends',
 					'nodeType':0#tipo base, raiz
 				}
 			],
 			'links': [],
 		}
+		i=0
 		for champ_t in tags:
-			network_data['nodes'].append(
-				{
+			i+=1
+			network_data['nodes'].append({
+					'id':i,
 					'name':champ_t,
 					'nodeType':1
-				}
-			)
-			
-		print(network_data)
+				})
+			network_data['links'].append({
+					'source':0,
+					'target':i
+				})
+		for key,value in data.items():
+			champion_n = i+1
+			for k,v in value.items():
+				if k == 'name':
+					i+=1
+					network_data['nodes'].append({
+							'id':i,
+							'name':v,
+							'nodeType':2
+						})
+				elif k == 'primaryTag':
+					network_data['links'].append({
+						'source':v,
+						'target':champion_n
+					})
+				elif k == 'qtd':
+					continue
+				else:
+					i+=1
+					network_data['nodes'].append({
+							'id':i,
+							'name':k,
+							'value':v,
+							'nodeType':3
+						})
+					network_data['links'].append({
+						'source':champion_n,
+						'target':i
+					})
+
+		#print(network_data)
+		# with open('matches/static/jsons/network.json', 'w') as outfile:  
+		# 	json.dump(network_data, outfile)
+		return network_data
 
 
 
