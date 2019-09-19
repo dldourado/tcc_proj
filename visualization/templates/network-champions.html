@@ -3,13 +3,91 @@
 <html>
 <head>
 	<title>Network Diagram</title>
+	<style>
+		.links line {
+			stroke: #999;
+			stroke-opacity: 0.6;
+		}
+
+		.nodes circle {
+			stroke: black	;
+			stroke-width: 0px;
+		}
+	</style>
 </head>
 <body>
-
+	<!-- solução baseada em https://bl.ocks.org/puzzler10/4438752bb93f45dc5ad5214efaa12e4a -->
+	<svg width="800" height="500"></svg>
 	<script src="https://d3js.org/d3.v4.js"></script>
-	<div id="data-vis"></div>
 	<script type="text/javascript">
-		function color(d){
+		var svg = d3.select("svg"),
+		width = +svg.attr("width"),
+		height = +svg.attr("height");
+
+		var radius = 15; 
+
+		var data = {{dados|safe}};
+		//set up the simulation and add forces  
+		var simulation = d3.forceSimulation()
+							.nodes(data.nodes);
+									
+		var link_force =  d3.forceLink(data.links)
+								.id(function(d) { return d.id; });            
+				
+		var charge_force = d3.forceManyBody()
+			.strength(-100); 
+			
+		var center_force = d3.forceCenter(width / 2, height / 2);  
+							
+		simulation
+			.force("charge_force", charge_force)
+			.force("center_force", center_force)
+			.force("links",link_force)
+		;
+
+		//add tick instructions: 
+		simulation.on("tick", tickActions );
+
+		//add encompassing group for the zoom 
+		var g = svg.append("g")
+			.attr("class", "everything");
+
+		//draw lines for the links 
+		var link = g.append("g")
+			.attr("class", "links")
+			.selectAll("line")
+			.data(data.links)
+			.enter().append("line")
+			.attr("stroke-width", 2)
+			//.style("stroke", linkColour);        
+
+		//draw circles for the nodes 
+		var node = g.append("g")
+				.attr("class", "nodes") 
+				.selectAll("circle")
+				.data(data.nodes)
+				.enter()
+				.append("circle")
+				.attr("r", radius)
+				.attr("fill", nodeColor);
+		
+		
+		//add drag capabilities  
+		var drag_handler = d3.drag()
+			.on("start", drag_start)
+			.on("drag", drag_drag)
+			.on("end", drag_end);	
+			
+		drag_handler(node);
+
+
+		//add zoom capabilities 
+		var zoom_handler = d3.zoom()
+			.on("zoom", zoom_actions);
+
+		zoom_handler(svg);  
+
+		function nodeColor(d){
 			if(d.nodeType==0)
 				return "#000000"
 			if(d.nodeType==1)
@@ -21,66 +99,102 @@
 						
 			return "#69b3a2"
 		}
-		var data = {{dados|safe}};
-		// set the dimensions and margins of the graph
-		var margin = {top: 10, right: 10, bottom: 10, left: 10},
-		  width = 1200 - margin.left - margin.right,
-		  height = 600 - margin.top - margin.bottom;
+		//Drag functions 
+		//d is the node 
+		function drag_start(d) {
+		if (!d3.event.active) simulation.alphaTarget(0.3).restart();
+			d.fx = d.x;
+			d.fy = d.y;
+		}
+		//make sure you can't drag the circle outside the box
+		function drag_drag(d) {
+			d.fx = d3.event.x;
+			d.fy = d3.event.y;
+		}
 
-		// append the svg object to the body of the page
-		var svg = d3.select("#data-vis")
-		.append("svg")
-		  .attr("width", width + margin.left + margin.right)
-		  .attr("height", height + margin.top + margin.bottom)
-		  .call(d3.zoom().on("zoom", function () {
-			svg.attr("transform", d3.event.transform)
-			}))
-		// .append("g")
-		//   .attr("transform",
-		//         "translate(" + margin.left + "," + margin.top + ")");
-		var static_url = '{{st_url}}'
-		//d3.json(static_url+'file/ch.json', function(data) {
-			console.log(data)
-			// Initialize the links
-			var link = svg
-				.selectAll("line")
-				.data(data.links)
-				.enter()
-				.append("line")
-				  .style("stroke", "#aaa")
+		function drag_end(d) {
+			if (!d3.event.active) simulation.alphaTarget(0);
+			d.fx = null;
+			d.fy = null;
+		}
 
-			// Initialize the nodes
-			var node = svg
-				.selectAll("circle")
-				.data(data.nodes)
-				.enter()
-				.append("circle")
-				  .attr("r", 20)
-				  .style("fill", function(d){return color(d)})
+		//Zoom functions 
+		function zoom_actions(){
+			g.attr("transform", d3.event.transform)
+		}
 
-			// Let's list the force we wanna apply on the network
-			var simulation = d3.forceSimulation(data.nodes)                 // Force algorithm is applied to data.nodes
-			    .force("link", d3.forceLink()                               // This force provides links between nodes
-			        .id(function(d) { return d.id; })                     // This provide  the id of a node
-			        .links(data.links)                                    // and this the list of links
-					)
-					.force("charge", d3.forceManyBody().strength(-400))         // This adds repulsion between nodes. Play with the -400 for the repulsion strength
-					.force("center", d3.forceCenter(width / 2, height / 2))     // This force attracts nodes to the center of the svg area
-					.on("end", ticked);
+		function tickActions() {
+			//update circle positions each tick of the simulation 
+			node
+				.attr("cx", function(d) { return d.x; })
+				.attr("cy", function(d) { return d.y; });
+				
+			//update link positions 
+			link
+				.attr("x1", function(d) { return d.source.x; })
+				.attr("y1", function(d) { return d.source.y; })
+				.attr("x2", function(d) { return d.target.x; })
+				.attr("y2", function(d) { return d.target.y; });
+		} 
+		// // set the dimensions and margins of the graph
+		// var margin = {top: 10, right: 10, bottom: 10, left: 10},
+		//   width = 1200 - margin.left - margin.right,
+		//   height = 600 - margin.top - margin.bottom;
 
-			// This function is run at each iteration of the force algorithm, updating the nodes position.
-			function ticked() {
-				link
-				    .attr("x1", function(d) { return d.source.x; })
-				    .attr("y1", function(d) { return d.source.y; })
-				    .attr("x2", function(d) { return d.target.x; })
-				    .attr("y2", function(d) { return d.target.y; });
+		// // append the svg object to the body of the page
+		// var svg = d3.select("#data-vis")
+		// .append("svg")
+		//   .attr("width", width + margin.left + margin.right)
+		//   .attr("height", height + margin.top + margin.bottom)
+		//   .call(d3.zoom().on("zoom", function () {
+		// 	svg.attr("transform", d3.event.transform)
+		// 	}))
+		// // .append("g")
+		// //   .attr("transform",
+		// //         "translate(" + margin.left + "," + margin.top + ")");
+		// var static_url = '{{st_url}}'
+		// //d3.json(static_url+'file/ch.json', function(data) {
+		// 	console.log(data)
+		// 	// Initialize the links
+		// 	var link = svg
+		// 		.selectAll("line")
+		// 		.data(data.links)
+		// 		.enter()
+		// 		.append("line")
+		// 		  .style("stroke", "#aaa")
 
-				node
-				    .attr("cx", function (d) { return d.x+6; })
-				    .attr("cy", function(d) { return d.y-6; });
-			}
-		//});
+		// 	// Initialize the nodes
+		// 	var node = svg
+		// 		.selectAll("circle")
+		// 		.data(data.nodes)
+		// 		.enter()
+		// 		.append("circle")
+		// 		  .attr("r", 20)
+		// 		  .style("fill", function(d){return color(d)})
+
+		// 	// Let's list the force we wanna apply on the network
+		// 	var simulation = d3.forceSimulation(data.nodes)                 // Force algorithm is applied to data.nodes
+		// 	    .force("link", d3.forceLink()                               // This force provides links between nodes
+		// 	        .id(function(d) { return d.id; })                     // This provide  the id of a node
+		// 	        .links(data.links)                                    // and this the list of links
+		// 			)
+		// 			.force("charge", d3.forceManyBody().strength(-400))         // This adds repulsion between nodes. Play with the -400 for the repulsion strength
+		// 			.force("center", d3.forceCenter(width / 2, height / 2))     // This force attracts nodes to the center of the svg area
+		// 			.on("end", ticked);
+
+		// 	// This function is run at each iteration of the force algorithm, updating the nodes position.
+		// 	function ticked() {
+		// 		link
+		// 		    .attr("x1", function(d) { return d.source.x; })
+		// 		    .attr("y1", function(d) { return d.source.y; })
+		// 		    .attr("x2", function(d) { return d.target.x; })
+		// 		    .attr("y2", function(d) { return d.target.y; });
+
+		// 		node
+		// 		    .attr("cx", function (d) { return d.x+6; })
+		// 		    .attr("cy", function(d) { return d.y-6; });
+		// 	}
+		// //});
 
 
 	</script>
