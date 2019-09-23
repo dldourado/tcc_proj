@@ -684,6 +684,7 @@ def generate_data(arq=True):
 			'totalCC' : 0,
 
 			'qtd' : 0,
+			'championId':champion.championId,
 			'primaryTag' : tags.index(champion.primaryTag)+1
 		}
 	for key,value in data.items():
@@ -719,7 +720,7 @@ def generate_data(arq=True):
 			for key,value in data.items():
 				ar = list()
 				for k,v in value.items():
-					if k == 'qtd':
+					if k == 'qtd' or k == 'championId':
 						continue
 					ar.append(v)
 				w_csv.writerow(ar)
@@ -754,6 +755,7 @@ def generate_data(arq=True):
 					network_data['nodes'].append({
 							'id':i,
 							'name':v,
+							'championId':value['championId'],
 							'nodeType':2
 						})
 				elif k == 'primaryTag':
@@ -761,7 +763,7 @@ def generate_data(arq=True):
 						'source':v,
 						'target':champion_n
 					})
-				elif k == 'qtd':
+				elif k == 'qtd' or k == 'championId':
 					continue
 				else:
 					i+=1

@@ -20,6 +20,7 @@
 	<svg width="800" height="500"></svg>
 	<script src="https://d3js.org/d3.v4.js"></script>
 	<script type="text/javascript">
+		var static_url = '{{st_url}}'
 		var svg = d3.select("svg"),
 		width = +svg.attr("width"),
 		height = +svg.attr("height");
@@ -27,6 +28,7 @@
 		var radius = 15; 
 
 		var data = {{dados|safe}};
+		console.log(data);
 		//set up the simulation and add forces  
 		var simulation = d3.forceSimulation()
 							.nodes(data.nodes);
@@ -70,6 +72,14 @@
 				.append("circle")
 				.attr("r", radius)
 				.attr("fill", nodeColor);
+				{% comment %} .filter(d => !!d["championId"]) // filter only data with the "data-class" property
+				//.attr("data-class", d => d["data-class"])
+				.append("svg:image")
+				.attr("xlink:href",  function(d) { return static_url+'champion/'+d['championId']+'.png'})
+				.attr("x", function(d) { return -25;})
+				.attr("y", function(d) { return -25;})
+				.attr("height", 50)
+				.attr("width", 50); {% endcomment %}
 		
 		
 		//add drag capabilities  
@@ -93,6 +103,7 @@
 			if(d.nodeType==1)
 				return "#ff0000"
 			if(d.nodeType==2)
+				//return static_url+'champion/'+d.championId+'.png'
 				return "#00ff00"
 			if(d.nodeType==3)
 				return "#0000ff"
