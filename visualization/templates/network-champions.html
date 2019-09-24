@@ -20,7 +20,9 @@
 	<svg width="800" height="500"></svg>
 	<script src="https://d3js.org/d3.v4.js"></script>
 	<script type="text/javascript">
-		var static_url = '{{st_url}}'
+		var getUrl = window.location;
+		var baseUrl = getUrl .protocol + "//" + getUrl.host;// + "/" + getUrl.pathname.split('/')[1];
+		var static_url = baseUrl+'{{st_url}}'
 		var svg = d3.select("svg"),
 		width = +svg.attr("width"),
 		height = +svg.attr("height");
@@ -72,6 +74,18 @@
 				.append("circle")
 				.attr("r", radius)
 				.attr("fill", nodeColor);
+
+		function whut(d){
+			console.log(static_url+'champion/'+d.championId+'.png');
+			return static_url+'champion/'+d.championId+'.png';
+		}
+		/*var img = */node.append("svg:image")
+		        .attr("xlink:href",  function(d) {  return 'championId' in d ? static_url+'champion/'+d.championId+'.png': null })
+		        .attr("x", function(d) { return -25;})
+		        .attr("y", function(d) { return -25;})
+		        .attr("height", 50)
+		        .attr("width", 50);
+
 				{% comment %} .filter(d => !!d["championId"]) // filter only data with the "data-class" property
 				//.attr("data-class", d => d["data-class"])
 				.append("svg:image")
@@ -80,6 +94,10 @@
 				.attr("y", function(d) { return -25;})
 				.attr("height", 50)
 				.attr("width", 50); {% endcomment %}
+		node.append('title')
+				.text(function(d){
+					return nodeName(d);
+				});
 		
 		
 		//add drag capabilities  
@@ -96,7 +114,13 @@
 			.on("zoom", zoom_actions);
 
 		zoom_handler(svg);  
+		function nodeName(d){
+			var name = d.name;
+			if(d.nodeType==3)
+				name+='\n'+d.value.toFixed(2)
+			return name;
 
+		}
 		function nodeColor(d){
 			if(d.nodeType==0)
 				return "#000000"
