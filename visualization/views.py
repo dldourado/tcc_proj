@@ -38,5 +38,12 @@ def get_player(request):
 
 def champions_network(request):
 	st_url = settings.STATIC_URL
-	dados = generate_data(False)
+	try:
+		import json
+
+		json_data = open('static/jsons/network.json')   
+		dados = json.load(json_data)
+		#print(dados)
+	except:
+		dados = generate_data(False)
 	return render(request, 'network-champions.html', locals())
