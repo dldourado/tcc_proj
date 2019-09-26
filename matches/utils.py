@@ -734,8 +734,18 @@ def generate_data(arq=True):
 				}
 			],
 			'links': [],
+			'averages':{
+				'damageDealt':0,
+				'damageDealtChampions':0,
+				'damageTaken':0,
+				'kills':0,
+				'deaths':0,
+				'assists':0,
+				'totalCC':0
+			}
 		}
 		i=0
+		total_champions=len(data)
 		for champ_t in tags:
 			i+=1
 			network_data['nodes'].append({
@@ -777,10 +787,12 @@ def generate_data(arq=True):
 						'source':champion_n,
 						'target':i
 					})
+				if k in network_data['averages']:
+					network_data['averages'][k]+=v/total_champions
 
 		#print(network_data)
-		# with open('matches/static/jsons/network.json', 'w') as outfile:  
-		# 	json.dump(network_data, outfile)
+		with open('matches/static/jsons/network.json', 'w') as outfile:  
+			json.dump(network_data, outfile)
 		return network_data
 
 

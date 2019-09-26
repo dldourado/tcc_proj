@@ -10,14 +10,13 @@
 		}
 
 		.nodes circle {
-			stroke: black	;
-			stroke-width: 0px;
+			stroke: black;
 		}
 	</style>
 </head>
 <body>
 	<!-- solução baseada em https://bl.ocks.org/puzzler10/4438752bb93f45dc5ad5214efaa12e4a -->
-	<svg width="800" height="500"></svg>
+	<svg width="1200" height="600"></svg>
 	<script src="https://d3js.org/d3.v4.js"></script>
 	<script type="text/javascript">
 		var getUrl = window.location;
@@ -76,12 +75,30 @@
 				.attr("class", "nodes") 
 				.selectAll("circle")
 				.data(data.nodes)
-				.enter()/*
-				.append("circle")
+				.enter().append("svg:g")
+				.attr("class", "node")
+				.attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; })
+				
+		node.append("circle")
 				.attr("r", radius)
-				.attr("fill", nodeColor)/*;
+				.attr("fill", nodeColor)
+				.attr("stroke-width", nodeBorder);
 
-		var img = node.*/.filter((d) => d.nodeType == 2).append("image")
+		node.filter((d) => d.nodeType == 0).append("image")
+		        .attr("xlink:href",  function(d) {  return static_url+'img/logo_lol.png'})
+		        .attr("x", function(d) { return -63.5;})
+		        .attr("y", function(d) { return -25;})
+		        .attr("height", 50)
+		        .attr("width", 127);
+
+		node.filter((d) => d.nodeType == 1).append("image")
+		        .attr("xlink:href",  function(d) {  return static_url+'img/'+d.name+'.png'})
+		        .attr("x", function(d) { return -25;})
+		        .attr("y", function(d) { return -25;})
+		        .attr("height", 50)
+		        .attr("width", 50);
+
+		node.filter((d) => d.nodeType == 2).append("image")
 		        .attr("xlink:href",  function(d) {  return static_url+'champion/'+d.championId+'.png'})
 		        .attr("x", function(d) { return -25;})
 		        .attr("y", function(d) { return -25;})
@@ -122,17 +139,28 @@
 			return name;
 
 		}
-		function nodeColor(d){
-			if(d.nodeType==0)
-				return "#000000"
-			if(d.nodeType==1)
-				return "#ff0000"
-			if(d.nodeType==2)
-				return "#00ff00"
+		function nodeBorder(d){
 			if(d.nodeType==3)
-				return "#0000ff"
+				return '1px';
+			return '0px';
+
+		}
+		function nodeColor(d){
+			if(d.nodeType==3){
+				var neg = 1;
+				if(d.value>data.averages[d.name]){
+					neg = 1-Math.min(1,((d.value/data.averages[d.name])-1));
+					console.log(d.value,data.averages[d.name],neg);
+					return 'rgb(255,'+String(neg*255)+','+String(neg*255)+')';
+				}
+				else if(d.value<data.averages[d.name]){
+					neg = d.value/data.averages[d.name];
+					return 'rgb('+String(neg*255)+','+String(neg*255)+',255)';
+				}
+				return "#ffffff"
+			}
 						
-			return "#69b3a2"
+			return "transparent"
 		}
 		//Drag functions 
 		//d is the node 
@@ -165,8 +193,8 @@
 				.attr("cy", function(d) { if(d.nodeType!=2) return d.y; })*/
 				.attr("transform", function(d) {
 					/*d.x =  Math.max(0, Math.min(width - (50/2 || 16), d.x));
-    				d.y =  Math.max(50, Math.min(height - (50/2 || 16), d.y));*/
-    				if(d.nodeType==2)
+    				d.y =  Math.max(50, Math.min(height - (50/2 || 16), d.y));
+    				if(d.nodeType==2)*/
 		            return "translate(" + d.x + "," + d.y + ")";
 		        });
 				
