@@ -791,8 +791,8 @@ def generate_data(arq=True):
 					network_data['averages'][k]+=v/total_champions
 
 		#print(network_data)
-		with open('matches/static/jsons/network.json', 'w') as outfile:  
-			json.dump(network_data, outfile)
+		# with open('matches/static/jsons/network.json', 'w') as outfile:  
+		# 	json.dump(network_data, outfile)
 		return network_data
 
 
