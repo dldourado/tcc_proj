@@ -12,10 +12,28 @@
 		.nodes circle {
 			stroke: black;
 		}
+		ul{
+			list-style: none;
+		}
+		ul li{
+			display: inline;
+			padding: 5px;
+			border: solid 1px #333;
+			border-radius: 25px;
+		}
+		ul li:first-child{
+			border-color: transparent;
+		}
 	</style>
 </head>
 <body>
 	<!-- solução baseada em https://bl.ocks.org/puzzler10/4438752bb93f45dc5ad5214efaa12e4a -->
+	<ul>
+		<li><label>Realçar: </label></li>
+		{% for average in dados.averages %}
+		<li><input type="checkbox" class="checkboxes" id="checkbox-{{average}}" name="{{average}}" onchange="tickActions()"><label>{{average}}</label></li>
+		{% endfor %}
+	</ul>
 	<svg width="1200" height="600"></svg>
 	<script src="https://d3js.org/d3.v4.js"></script>
 	<script type="text/javascript">
@@ -110,12 +128,21 @@
 				.text(function(d){
 					return nodeName(d);
 				});
-		/*node.append("text")
+
+		node.filter((d) => d.nodeType == 2).append("text")
 			.attr("class", "nodetext")
-			.attr("x", 20)
+			.attr("x", -25)
 			.attr("y", 40)
 			.attr("fill", '#333')
-			.text(function(d) { return d.name; });*/
+			.text(function(d) { return d.name; });
+
+		node.filter((d) => d.nodeType == 3).append("text")
+			.attr("class", "nodetext")
+			.attr("x", -10)
+			.attr("y", 5)
+			.attr("fill", '#333')
+			.attr("font-size",'10px')
+			.text(function(d) { return smallNumbers(d.value); });
 		
 		
 		//add drag capabilities  
@@ -131,7 +158,40 @@
 		var zoom_handler = d3.zoom()
 			.on("zoom", zoom_actions);
 
-		zoom_handler(svg);  
+		zoom_handler(svg); 
+		function smallNumbers(value){
+			if(value>1000000)
+				return String((value/1000000).toFixed(0)+'M');
+			if(value>1000)
+				return String((value/1000).toFixed(0)+'K');
+			if(value>100)
+				return value.toFixed(1);
+			return value.toFixed(2);
+		}
+		function nodeSize(d){
+			if(d.name in data.averages){
+				if(document.getElementById('checkbox-'+d.name).checked){
+					return 30;
+				}
+			}
+			return 15;
+		} 
+		function nodeLabelSize(d){
+			if(d.name in data.averages){
+				if(document.getElementById('checkbox-'+d.name).checked){
+					return 20;
+				}
+			}
+			return 10;
+		} 
+		function coverAll(d){
+			if(d.name in data.averages){
+				if(document.getElementById('checkbox-'+d.name).checked){
+					return true;
+				}
+			}
+			return false;
+		} 
 		function nodeName(d){
 			var name = d.name;
 			if(d.nodeType==3)
@@ -150,7 +210,7 @@
 				var neg = 1;
 				if(d.value>data.averages[d.name]){
 					neg = 1-Math.min(1,((d.value/data.averages[d.name])-1));
-					console.log(d.value,data.averages[d.name],neg);
+					//console.log(d.value,data.averages[d.name],neg);
 					return 'rgb(255,'+String(neg*255)+','+String(neg*255)+')';
 				}
 				else if(d.value<data.averages[d.name]){
@@ -191,12 +251,22 @@
 			node
 				/*.attr("cx", function(d) { if(d.nodeType!=2) return d.x; })
 				.attr("cy", function(d) { if(d.nodeType!=2) return d.y; })*/
+				
 				.attr("transform", function(d) {
 					/*d.x =  Math.max(0, Math.min(width - (50/2 || 16), d.x));
     				d.y =  Math.max(50, Math.min(height - (50/2 || 16), d.y));
     				if(d.nodeType==2)*/
 		            return "translate(" + d.x + "," + d.y + ")";
-		        });
+		        })
+				.each(function(d){
+					if (coverAll(d)){
+						d3.select(this).raise();
+					}
+				})
+		        .select('circle')
+			        .attr('r',function(d){
+						return nodeSize(d);
+					});
 				
 			//update link positions 
 			link
