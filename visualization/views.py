@@ -41,16 +41,9 @@ def champions_network(request):
 	import json
 	try:
 
-		json_data = open('static/jsons/network.json')   
+		json_data = open(settings.STATIC_ROOT+'/jsons/network.json')
 		dados = json.load(json_data)
 		#print(dados)
 	except:
-
-		try:
-
-			json_data = open('/static/jsons/network.json')   
-			dados = json.load(json_data)
-			#print(dados)
-		except:
-			pass#dados = generate_data(False)
+		dados = generate_data(False)
 	return render(request, 'network-champions.html', locals())
