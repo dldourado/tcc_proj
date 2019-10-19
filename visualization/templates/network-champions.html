@@ -12,6 +12,9 @@
 		.nodes circle {
 			stroke: black;
 		}
+		.invisible {
+			display: none;
+		}
 		ul{
 			list-style: none;
 		}
@@ -31,7 +34,7 @@
 	<ul>
 		<li><label>Realçar: </label></li>
 		{% for average in dados.averages %}
-		<li><input type="checkbox" class="checkboxes" id="checkbox-{{average}}" name="{{average}}" onchange="tickActions()"><label>{{average}}</label></li>
+		<li><input type="checkbox" class="average-checkboxes" id="checkbox-{{average}}" name="{{average}}" onchange="hideElements()"><label>{{average}}</label></li>
 		{% endfor %}
 	</ul>
 	<svg width="1200" height="600"></svg>
@@ -94,8 +97,8 @@
 				.selectAll("circle")
 				.data(data.nodes)
 				.enter().append("svg:g")
-				.attr("class", "node")
-				.attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; })
+				.attr("class", "node visible")
+				//.attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; })
 				
 		node.append("circle")
 				.attr("r", radius)
@@ -168,6 +171,20 @@
 				return value.toFixed(1);
 			return value.toFixed(2);
 		}
+		function nodeTransparency(d){
+			if(document.querySelectorAll('.average-checkboxes:checked').length==0){
+				return 1.0;
+			}
+			if(d.name in data.averages){
+				if(document.getElementById('checkbox-'+d.name).checked){
+					return 1.0;
+				}
+				else{
+					return 0.0;
+				}
+			}
+			return 1.0;
+		} 
 		function nodeSize(d){
 			if(d.name in data.averages){
 				if(document.getElementById('checkbox-'+d.name).checked){
@@ -246,16 +263,50 @@
 			g.attr("transform", d3.event.transform)
 		}
 
+		function hideElements(){
+			console.log(node)
+			node
+				.each(function(d){
+					if(nodeTransparency(d)==1.0){
+						d.visible = true
+						d3.select(this).attr('opacity',1)
+						link.each(function(l){
+							if(l.source==d||l.target==d)
+								d3.select(this).attr('opacity',1)
+								//console.log(l)
+						})
+					}
+					else{
+						d.visible=false
+						d3.select(this).attr('opacity',0)
+						link.each(function(l){
+							if(l.source==d||l.target==d)
+								d3.select(this).attr('opacity',0)
+								//console.log(l)
+						})
+						/*d3.selectAll(".links")
+						.filter(function(l) {
+						    return (l.source === d) || (l.target === d);
+					   	}).attr('opacity',0)*/
+					}
+				})
+				/*.filter((d) => d.nodeType == 3)
+					.attr("opacity",function(d){
+		        		return nodeTransparency(d);
+		        	})*/
+		    //tickActions();
+		}
 		function tickActions() {
 			//update circle positions each tick of the simulation 
 			node
 				/*.attr("cx", function(d) { if(d.nodeType!=2) return d.x; })
 				.attr("cy", function(d) { if(d.nodeType!=2) return d.y; })*/
-				
+				.filter((d) => (d.nodeType != 3) || (d.nodeType == 3 && !('visible' in d) ) || ('visible' in d && d.visible==true) )
 				.attr("transform", function(d) {
 					/*d.x =  Math.max(0, Math.min(width - (50/2 || 16), d.x));
     				d.y =  Math.max(50, Math.min(height - (50/2 || 16), d.y));
     				if(d.nodeType==2)*/
+    				//if(d.nodeType==3 && d.classList.contains("visible"))
 		            return "translate(" + d.x + "," + d.y + ")";
 		        })
 				.each(function(d){
@@ -264,6 +315,10 @@
 					}
 				})
 		        .select('circle')
+		        	/*.attr('opacity',function(d){
+		        		if(d.nodeType==3) return nodeTransparency(d);
+		        		else return 1.0;
+		        	})*/
 			        .attr('r',function(d){
 						return nodeSize(d);
 					});
