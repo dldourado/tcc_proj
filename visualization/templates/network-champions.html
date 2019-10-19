@@ -32,6 +32,9 @@
 			height: 10px;
 			border: 1px solid black;
 		}
+		#colorPicker li{
+			display: inline-flex;
+		}
 	</style>
 </head>
 <body>
@@ -71,13 +74,15 @@
 			['#fee5d9','#fcae91','#fb6a4a','#de2d26','#a50f15']
 		]
 		var lista = document.getElementById('colorPicker')
-		cores.forEach(item => {
-			lista.innerHTML+='<li><input type="checkbox" class="color-checkboxes">'
-			item.forEach(cor => {
-				lista.innerHTML+='<div class="color-viewer" style="background-color: '+cor+';"></div>'
-			})
-			lista.innerHTML+='</li>'
-		})
+		var st = ''
+		for(var i=0;i<cores.length;i++){
+			st+='<li><input type="checkbox" class="color-checkboxes" id="cor-'+i+'"/>'
+			for(var j=0;j<cores[i].length;j++){
+				st+='<div class="color-viewer" style="background-color: '+cores[i][j]+';"></div>'
+			}
+			st+='</li>'
+		}
+		lista.innerHTML+=st
 		var getUrl = window.location;
 		var baseUrl = getUrl .protocol + "//" + getUrl.host;// + "/" + getUrl.pathname.split('/')[1];
 		var static_url = baseUrl+'{{st_url}}'
