@@ -18,28 +18,66 @@
 		ul{
 			list-style: none;
 		}
-		ul li{
+		ul.avs li{
 			display: inline;
 			padding: 5px;
 			border: solid 1px #333;
 			border-radius: 25px;
 		}
-		ul li:first-child{
+		ul.avs li:first-child{
 			border-color: transparent;
+		}
+		.color-viewer{
+			width: 10px;
+			height: 10px;
+			border: 1px solid black;
 		}
 	</style>
 </head>
 <body>
 	<!-- solução baseada em https://bl.ocks.org/puzzler10/4438752bb93f45dc5ad5214efaa12e4a -->
-	<ul>
+	<ul class="avs">
 		<li><label>Realçar: </label></li>
 		{% for average in dados.averages %}
 		<li><input type="checkbox" class="average-checkboxes" id="checkbox-{{average}}" name="{{average}}" onchange="hideElements()"><label>{{average}}</label></li>
 		{% endfor %}
 	</ul>
+	<div>
 	<svg width="1200" height="600"></svg>
+	<ul id="colorPicker"></ul>
+	</div>
 	<script src="https://d3js.org/d3.v4.js"></script>
 	<script type="text/javascript">
+		var cores = [
+		//multi-hue
+			['#edf8fb','#b2e2e2','#66c2a4','#2ca25f','#006d2c'],
+			['#edf8fb','#b3cde3','#8c96c6','#8856a7','#810f7c'],
+			['#f0f9e8','#bae4bc','#7bccc4','#43a2ca','#0868ac'],
+			['#fef0d9','#fdcc8a','#fc8d59','#e34a33','#b30000'],
+			['#f1eef6','#bdc9e1','#74a9cf','#2b8cbe','#045a8d'],
+			['#f6eff7','#bdc9e1','#67a9cf','#1c9099','#016c59'],
+			['#f1eef6','#d7b5d8','#df65b0','#dd1c77','#980043'],
+			['#feebe2','#fbb4b9','#f768a1','#c51b8a','#7a0177'],
+			['#ffffcc','#c2e699','#78c679','#31a354','#006837'],
+			['#ffffcc','#a1dab4','#41b6c4','#2c7fb8','#253494'],
+			['#ffffd4','#fed98e','#fe9929','#d95f0e','#993404'],
+			['#ffffb2','#fecc5c','#fd8d3c','#f03b20','#bd0026'],
+		//single-hue
+			['#eff3ff','#bdd7e7','#6baed6','#3182bd','#08519c'],
+			['#edf8e9','#bae4b3','#74c476','#31a354','#006d2c'],
+			['#f7f7f7','#cccccc','#969696','#636363','#252525'],
+			['#feedde','#fdbe85','#fd8d3c','#e6550d','#a63603'],
+			['#f2f0f7','#cbc9e2','#9e9ac8','#756bb1','#54278f'],
+			['#fee5d9','#fcae91','#fb6a4a','#de2d26','#a50f15']
+		]
+		var lista = document.getElementById('colorPicker')
+		cores.forEach(item => {
+			lista.innerHTML+='<li><input type="checkbox" class="color-checkboxes">'
+			item.forEach(cor => {
+				lista.innerHTML+='<div class="color-viewer" style="background-color: '+cor+';"></div>'
+			})
+			lista.innerHTML+='</li>'
+		})
 		var getUrl = window.location;
 		var baseUrl = getUrl .protocol + "//" + getUrl.host;// + "/" + getUrl.pathname.split('/')[1];
 		var static_url = baseUrl+'{{st_url}}'
@@ -264,7 +302,6 @@
 		}
 
 		function hideElements(){
-			console.log(node)
 			node
 				.each(function(d){
 					if(nodeTransparency(d)==1.0){
@@ -273,7 +310,6 @@
 						link.each(function(l){
 							if(l.source==d||l.target==d)
 								d3.select(this).attr('opacity',1)
-								//console.log(l)
 						})
 					}
 					else{
@@ -282,26 +318,22 @@
 						link.each(function(l){
 							if(l.source==d||l.target==d)
 								d3.select(this).attr('opacity',0)
-								//console.log(l)
 						})
-						/*d3.selectAll(".links")
-						.filter(function(l) {
-						    return (l.source === d) || (l.target === d);
-					   	}).attr('opacity',0)*/
 					}
 				})
-				/*.filter((d) => d.nodeType == 3)
-					.attr("opacity",function(d){
-		        		return nodeTransparency(d);
-		        	})*/
-		    //tickActions();
+		    tickActions();
 		}
 		function tickActions() {
 			//update circle positions each tick of the simulation 
 			node
 				/*.attr("cx", function(d) { if(d.nodeType!=2) return d.x; })
 				.attr("cy", function(d) { if(d.nodeType!=2) return d.y; })*/
-				.filter((d) => (d.nodeType != 3) || (d.nodeType == 3 && !('visible' in d) ) || ('visible' in d && d.visible==true) )
+				.filter(
+					(d) => 
+						(d.nodeType != 3) ||
+						(d.nodeType == 3 && !('visible' in d) ) ||
+						('visible' in d && d.visible==true)
+				)
 				.attr("transform", function(d) {
 					/*d.x =  Math.max(0, Math.min(width - (50/2 || 16), d.x));
     				d.y =  Math.max(50, Math.min(height - (50/2 || 16), d.y));
