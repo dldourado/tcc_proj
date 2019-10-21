@@ -96,27 +96,48 @@
 
 		var positives = document.getElementsByClassName('positive-color-checkboxes')
 		var negatives = document.getElementsByClassName('negative-color-checkboxes')
+
+		var positiveIndex = -1
+		var negativeIndex = -1
 		function changeState(caixa){
 			var spl = caixa.id.split('-')
 			if(spl[0]=="positiveCor"){
 				negatives[parseInt(spl[1])].disabled = caixa.checked
 				for(var j = 0;j<positives.length; j++){
-					if(j!=parseInt(spl[1]))
+					if(j!=parseInt(spl[1])&&positives[j].checked){
 						positives[j].checked=false;
+						negatives[j].disabled=false;
+					}
+				}
+
+				if(caixa.checked){
+					positiveIndex = parseInt(spl[1])
+				}
+				else{
+					positiveIndex = -1
 				}
 			}
 			else{
 				positives[parseInt(spl[1])].disabled = caixa.checked
 				for(var j = 0;j<negatives.length; j++){
-					if(j!=parseInt(spl[1]))
+					if(j!=parseInt(spl[1])&&negatives[j].checked){
 						negatives[j].checked=false;
+						positives[j].disabled=false;
+					}
+				}
+
+				if(caixa.checked){
+					negativeIndex = parseInt(spl[1])
+				}
+				else{
+					negativeIndex = -1
 				}
 			}
-			console.log(caixa.id)
-			// if(positivo){
-
-			// 	negatives
-			// }
+			node
+		        .select('circle')
+			        .attr('fill',function(d){
+						return nodeColor(d);
+					});
 		}
 
 		for (var i = 0; i < positives.length; i++) {
@@ -313,15 +334,45 @@
 			return '0px';
 
 		}
+		function calcRange(valor, media){
+			var v = 0.0
+			if(valor>media){
+				v = Math.min(1,((valor/media)-1))
+			}
+			else{
+				v = 1-(valor/media)
+			}
+			if(v>0.8){
+				return 4
+			}
+			if(v>0.6){
+				return 3
+			}
+			if(v>0.4){
+				return 2
+			}
+			if(v>0.2){
+				return 1
+			}
+			if(v>0.0){
+				return 0
+			}
+			return 0
+		}
 		function nodeColor(d){
 			if(d.nodeType==3){
 				var neg = 1;
 				if(d.value>data.averages[d.name]){
+					if(positiveIndex!=-1){
+						return cores[positiveIndex][calcRange(d.value,data.averages[d.name])]
+					}
 					neg = 1-Math.min(1,((d.value/data.averages[d.name])-1));
-					//console.log(d.value,data.averages[d.name],neg);
 					return 'rgb(255,'+String(neg*255)+','+String(neg*255)+')';
 				}
 				else if(d.value<data.averages[d.name]){
+					if(negativeIndex!=-1){
+						return cores[negativeIndex][calcRange(d.value,data.averages[d.name])]
+					}
 					neg = d.value/data.averages[d.name];
 					return 'rgb('+String(neg*255)+','+String(neg*255)+',255)';
 				}
