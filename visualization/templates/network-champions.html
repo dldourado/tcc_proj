@@ -32,7 +32,10 @@
 			height: 10px;
 			border: 1px solid black;
 		}
-		#colorPicker li{
+		.colorPicker{
+			max-width: 100px;
+		}
+		.content-inline{
 			display: inline-flex;
 		}
 	</style>
@@ -45,9 +48,10 @@
 		<li><input type="checkbox" class="average-checkboxes" id="checkbox-{{average}}" name="{{average}}" onchange="hideElements()"><label>{{average}}</label></li>
 		{% endfor %}
 	</ul>
-	<div>
-	<svg width="1200" height="600"></svg>
-	<ul id="colorPicker"></ul>
+	<div class="content-inline">
+		<svg width="900" height="600"></svg>
+		<ul id="colorPickerPositive" class="colorPicker"><li><strong>Acima</strong></li></ul>
+		<ul id="colorPickerNegative" class="colorPicker"><li><strong>Abaixo</strong></li></ul>
 	</div>
 	<script src="https://d3js.org/d3.v4.js"></script>
 	<script type="text/javascript">
@@ -73,16 +77,60 @@
 			['#f2f0f7','#cbc9e2','#9e9ac8','#756bb1','#54278f'],
 			['#fee5d9','#fcae91','#fb6a4a','#de2d26','#a50f15']
 		]
-		var lista = document.getElementById('colorPicker')
-		var st = ''
+		var positive = document.getElementById('colorPickerPositive')
+		var negative = document.getElementById('colorPickerNegative')
+		var positiveStr = ''
+		var negativeStr = ''
 		for(var i=0;i<cores.length;i++){
-			st+='<li><input type="checkbox" class="color-checkboxes" id="cor-'+i+'"/>'
+			positiveStr+='<li class="content-inline"><input type="checkbox" class="positive-color-checkboxes" id="positiveCor-'+i+'"/>'
+			negativeStr+='<li class="content-inline"><input type="checkbox" class="negative-color-checkboxes" id="negativeCor-'+i+'"/>'
 			for(var j=0;j<cores[i].length;j++){
-				st+='<div class="color-viewer" style="background-color: '+cores[i][j]+';"></div>'
+				positiveStr+='<div class="color-viewer" style="background-color: '+cores[i][j]+';"></div>'
+				negativeStr+='<div class="color-viewer" style="background-color: '+cores[i][j]+';"></div>'
 			}
-			st+='</li>'
+			positiveStr+='</li>'
+			negativeStr+='</li>'
 		}
-		lista.innerHTML+=st
+		positive.innerHTML+=positiveStr
+		negative.innerHTML+=negativeStr
+
+		var positives = document.getElementsByClassName('positive-color-checkboxes')
+		var negatives = document.getElementsByClassName('negative-color-checkboxes')
+		function changeState(caixa){
+			var spl = caixa.id.split('-')
+			if(spl[0]=="positiveCor"){
+				negatives[parseInt(spl[1])].disabled = caixa.checked
+				for(var j = 0;j<positives.length; j++){
+					if(j!=parseInt(spl[1]))
+						positives[j].checked=false;
+				}
+			}
+			else{
+				positives[parseInt(spl[1])].disabled = caixa.checked
+				for(var j = 0;j<negatives.length; j++){
+					if(j!=parseInt(spl[1]))
+						negatives[j].checked=false;
+				}
+			}
+			console.log(caixa.id)
+			// if(positivo){
+
+			// 	negatives
+			// }
+		}
+
+		for (var i = 0; i < positives.length; i++) {
+			positives[i].addEventListener('change', (event) => {
+				changeState(event.target)
+			})
+		}
+
+		for (var i = 0; i < negatives.length; i++) {
+			negatives[i].addEventListener('change', (event) => {
+				changeState(event.target)
+			})
+		}
+
 		var getUrl = window.location;
 		var baseUrl = getUrl .protocol + "//" + getUrl.host;// + "/" + getUrl.pathname.split('/')[1];
 		var static_url = baseUrl+'{{st_url}}'
