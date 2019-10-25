@@ -18,13 +18,13 @@
 		ul{
 			list-style: none;
 		}
-		ul.avs li{
+		ul.avs > li{
 			display: inline;
 			padding: 5px;
 			border: solid 1px #333;
 			border-radius: 25px;
 		}
-		ul.avs li:first-child{
+		ul.avs > li:first-child{
 			border-color: transparent;
 		}
 		.color-viewer{
@@ -38,6 +38,39 @@
 		.content-inline{
 			display: inline-flex;
 		}
+		.info{
+			float: right;
+		}
+		.info span{
+			border: 1px solid;
+			border-radius: 50%;
+			padding: 0 6.5px;
+			margin-right: 5px;
+			background-color: cyan;
+			font-style: italic;
+			font-weight: bolder;
+		}
+		.more-info{
+			display: none;
+			position: fixed;
+			left: 25%;
+			width: 50%;
+			top: 5%;
+			background-color: white;
+			padding: 15px;
+			border: solid 1px #333;
+			border-radius: 25px;
+		}
+		.more-info p, .more-info li{
+			font-size: 0.8em;
+			text-align: justify;
+		}
+		.info:hover .more-info{
+			display: block;
+		}
+		*{
+			transition: 0.5s opacity linear;
+		}
 	</style>
 </head>
 <body>
@@ -47,12 +80,32 @@
 		{% for average in dados.averages %}
 		<li><input type="checkbox" class="average-checkboxes" id="checkbox-{{average}}" name="{{average}}" onchange="hideElements()"><label>{{average}}</label></li>
 		{% endfor %}
+		<li class="info"> <span>i</span>Mais informações
+			<div class="more-info">
+				<h4>A visualização</h4>
+				<p>Esta visualização mostra os campeões do jogo League of Legends(raiz da arvore) organizados por grupos de suas classes(ícones dourados). Em cada campeão um conjunto de atributos estão ligados e mostram o valor médio daquele atributo para o personagem em todas as partidas da base de dados</p>
+				<p>O seguinte conjunto de interações podem ser realizadas</p>
+				<ol>
+					<li>É possivel movimentar a visualização arrastando com o clique do mouse sobre a area dela</li>
+					<li>É possivel dar zoom com o scroll do mouse(pinch em notebooks)</li>
+					<li>Selecionar um ou mais atributos nos checkboxes superiores, removendo os não selecionados e aumentando o raio dos selecionados</li>
+					<li>Selecionar um grupo de cores à direita</li>
+				</ol>
+				<h4>Como Visualizar: 1 grupo de cores</h4>
+				<p>Por padrão até um grupo de cores pode ser selecionado, caso nenhum grupo for selecionado, um tom de vermelho será utilizado</p>
+				<p>Os atributos dos campeões terão suas cores modificadas respeitando o critério da normalização, ou seja, os atributos com valores mais proximos do mínimo serão representados pelas cores mais a esquerda e os mais próximos do máximo, a direita(caso nenhum grupo de cores tenha sido selecionado, as cores se aproximam do branco e vermelho respectivamente). </p>
+				<h4>Como Visualizar: 2 grupo de cores</h4>
+				<p>Ao marcar a opção de utilizar dois grupos de cores os atributos serão colorizados baseando-se num calculo a partir da média geral daquele atributo entre todos os campeões, caso nenhum grupo for selecionado, tons de vermelho será utilizado para valores maiores que a média, e um tons de azul para valores abaixo.</p>
+				<p>Ao selecionar grupos de cores nas duas colunas, as cores mais a direita do grupo "acima" representarão os valores maiores acima da média e as cores mais a direita do grupo "abaixo" os menores valores abaixo da média. As cores mais a esquerda dos grupos, representam os valores mais próximos da média</p>
+			</div>
+		</li>
 	</ul>
 	<div class="content-inline">
 		<svg width="900" height="600"></svg>
-		<ul id="colorPickerPositive" class="colorPicker"><li><strong>Acima</strong></li></ul>
-		<ul id="colorPickerNegative" class="colorPicker"><li><strong>Abaixo</strong></li></ul>
+		<ul id="colorPickerPositive" class="colorPicker"><li id="columnTitleAcima" style="opacity: 0;"><strong>Acima</strong></li></ul>
+		<ul id="colorPickerNegative" class="colorPicker" style="opacity: 0;"><li><strong>Abaixo</strong></li></ul>
 	</div>
+	<div style="float:right;"><input id="duasCores" type="checkbox" name="qtdCor" onclick="useColor(this);">Usar duas cores?</div>
 	<script src="https://d3js.org/d3.v4.js"></script>
 	<script type="text/javascript">
 		var cores = [
@@ -139,6 +192,21 @@
 						return nodeColor(d);
 					});
 		}
+		function useColor(picker){
+			if(picker.checked){
+				document.getElementById('colorPickerNegative').style.opacity = '1';
+				document.getElementById('columnTitleAcima').style.opacity = '1';
+			}
+			else{
+				document.getElementById('colorPickerNegative').style.opacity = '0';
+				document.getElementById('columnTitleAcima').style.opacity = '0';
+			}
+			node
+		        .select('circle')
+			        .attr('fill',function(d){
+						return nodeColor(d);
+					});			
+		}
 
 		for (var i = 0; i < positives.length; i++) {
 			positives[i].addEventListener('change', (event) => {
@@ -162,6 +230,23 @@
 		var radius = 15; 
 
 		var data = {{dados|safe}};
+		var menores_valores = {}
+		var maiores_valores = {}
+		for(var k in data.averages){
+			menores_valores[k]=data.averages[k];
+			maiores_valores[k]=data.averages[k];
+
+		}
+		for(var vals = 0; vals<data.nodes.length; vals++){
+			if(data.nodes[vals].name in menores_valores){
+				if(menores_valores[data.nodes[vals].name]>data.nodes[vals].value && /*retirar ao pegar mais dados*/data.nodes[vals].value!=0/*retirar ao pegar mais dados*/){
+					menores_valores[data.nodes[vals].name]=data.nodes[vals].value;
+				}
+				else if(maiores_valores[data.nodes[vals].name]<data.nodes[vals].value){
+					maiores_valores[data.nodes[vals].name]=data.nodes[vals].value;
+				}
+			}
+		}
 		//var defs = svg.insert("svg:defs")
 		//	.data(["end"]);
 
@@ -359,9 +444,37 @@
 			}
 			return 0
 		}
+		function calcRangeSingleColor(valor, media){
+			var v = (valor/media)
+			if(v>0.8){
+				return 4
+			}
+			if(v>0.6){
+				return 3
+			}
+			if(v>0.4){
+				return 2
+			}
+			if(v>0.2){
+				return 1
+			}
+			if(v>0.0){
+				return 0
+			}
+			return 0
+		}
 		function nodeColor(d){
 			if(d.nodeType==3){
 				var neg = 1;
+				if(!document.getElementById('duasCores').checked){//trocar condição
+					if(positiveIndex!=-1){
+						return cores[positiveIndex][calcRangeSingleColor(d.value - menores_valores[d.name],maiores_valores[d.name] - menores_valores[d.name])]
+					}
+					neg = 1-((d.value - menores_valores[d.name])/(maiores_valores[d.name] - menores_valores[d.name]))
+					return 'rgb(255,'+String(neg*255)+','+String(neg*255)+')';
+				}
+
+
 				if(d.value>data.averages[d.name]){
 					if(positiveIndex!=-1){
 						return cores[positiveIndex][calcRange(d.value,data.averages[d.name])]
