@@ -666,7 +666,7 @@ def create_resumed_player_stats(id):
 
 from champion.models import Champion
 from decimal import Decimal
-def generate_data(arq=True):
+def generate_data(vis=0):
 	data = {}
 	champions = Champion.objects.all()
 	tags = []
@@ -704,7 +704,7 @@ def generate_data(arq=True):
 				data[c_id]['totalCC']+=participant_stat.timeCCingOthers/data[c_id]['qtd']
 			else:
 				print(data[c_id]['name'])
-	if arq:
+	if vis==0:
 		import csv
 		print(tags)
 		with open('champions.data', mode='w') as champion_file:
@@ -724,7 +724,7 @@ def generate_data(arq=True):
 						continue
 					ar.append(v)
 				w_csv.writerow(ar)
-	else:
+	elif vis==1:
 		network_data = {
 			'nodes': [
 				{
@@ -794,6 +794,28 @@ def generate_data(arq=True):
 		# with open('matches/static/jsons/network.json', 'w') as outfile:  
 		# 	json.dump(network_data, outfile)
 		return network_data
+	elif vis==2:
+		treemap_data = {}
+		for key,value in data.items():
+			champs = value['name']
+			classe = tags[int(value['primaryTag'])-1]
+
+			for k,v in value.items():
+				if k == 'qtd' or k == 'championId' or k=='name' or k=='primaryTag':
+					continue
+				else:
+					if k not in treemap_data:
+						treemap_data[k] = list()
+					else:
+						treemap_data[k].append({
+						"key": champs,
+						"classe": classe,
+						"value": v
+					})
+		print(treemap_data)
+		with open('matches/static/jsons/treemap.json', 'w') as outfile:  
+		 	json.dump(treemap_data, outfile)
+		return treemap_data
 
 
 

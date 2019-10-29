@@ -45,5 +45,17 @@ def champions_network(request):
 		dados = json.load(json_data)
 		#print(dados)
 	except:
-		dados = generate_data(False)
+		dados = generate_data(1)
 	return render(request, 'network-champions.html', locals())
+
+def stats_treemap(request):
+	st_url = settings.STATIC_URL
+	import json
+	try:
+
+		json_data = open(settings.STATIC_ROOT+'/jsons/treemap.json')
+		dados = json.load(json_data)
+		#print(dados)
+	except:
+		dados = generate_data(2)
+	return render(request, 'treemap.html', locals())
