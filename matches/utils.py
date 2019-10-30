@@ -810,7 +810,7 @@ def generate_data(vis=0):
 						treemap_data[k].append({
 						"key": champs,
 						"classe": classe,
-						"value": v
+						"value": int(v)
 					})
 		print(treemap_data)
 		with open('matches/static/jsons/treemap.json', 'w') as outfile:  

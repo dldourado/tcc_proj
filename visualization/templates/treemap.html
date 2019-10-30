@@ -10,6 +10,16 @@ Adapted from http://bl.ocks.org/ganeshv/6a8e9ada3ab7f2d88022, country example
 <title>Zoomable treemap template</title>
 <style>
 
+    ul{
+      list-style: none;
+      display: inline-flex;
+    }
+    ul.avs > li{
+      display: inline;
+      padding: 5px;
+      border: solid 1px #333;
+      border-radius: 25px;
+    }
 #chart {
   background: #fff;
   font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
@@ -70,6 +80,7 @@ rect.parent {
 </head>
 
 <body>
+<ul id="atributos"></ul>
 <div id="chart"></div>
 
 <script src="https://code.jquery.com/jquery-1.7.2.min.js"></script>
@@ -319,11 +330,20 @@ function main(o, data) {
         : d.key + " (" + formatNumber(d.value) + ")";
   }
 }
-
+function changeAtr(e){    
+  document.getElementById('chart').innerHTML=''
+  let dd = d3.nest().key(function(d) { return d.classe; }).entries(dados[e.id]);
+  main({title: e.id}, {key: e.id, values: dd});
+}
 var dados = {{dados|safe}}
-var dd = d3.nest().key(function(d) { return d.classe; }).entries(dados['damageDealt']);
-console.log(dd)
-main({title: "damageDealt"}, {key: "damageDealt", values: dd});
+var atr = null;
+for(key in dados){
+  if(atr==null) 
+    atr=key;
+  document.getElementById('atributos').innerHTML+='<li><input type="radio" class="atr-radio" id="'+key+'" name="atr-radio" onclick="changeAtr(this)"><label>'+key+'</label></li>'
+}
+document.getElementById(atr).checked = true
+document.getElementById(atr).dispatchEvent(new Event('click'))
 
 /*
 if (window.location.hash === "") {
