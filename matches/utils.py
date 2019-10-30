@@ -684,6 +684,7 @@ def generate_data(vis=0):
 			'totalCC' : 0,
 
 			'qtd' : 0,
+			'winRate' : 0,
 			'championId':champion.championId,
 			'primaryTag' : tags.index(champion.primaryTag)+1
 		}
@@ -702,6 +703,8 @@ def generate_data(vis=0):
 				data[c_id]['deaths']+=participant_stat.deaths/data[c_id]['qtd']
 				data[c_id]['assists']+=participant_stat.assists/data[c_id]['qtd']
 				data[c_id]['totalCC']+=participant_stat.timeCCingOthers/data[c_id]['qtd']
+				if participant_stat.win:
+					data[c_id]['winRate']+=1.0/data[c_id]['qtd']
 			else:
 				print(data[c_id]['name'])
 	if vis==0:
@@ -720,7 +723,7 @@ def generate_data(vis=0):
 			for key,value in data.items():
 				ar = list()
 				for k,v in value.items():
-					if k == 'qtd' or k == 'championId':
+					if k == 'qtd' or k == 'championId' or k == 'winRate':
 						continue
 					ar.append(v)
 				w_csv.writerow(ar)
@@ -773,7 +776,7 @@ def generate_data(vis=0):
 						'source':v,
 						'target':champion_n
 					})
-				elif k == 'qtd' or k == 'championId':
+				elif k == 'qtd' or k == 'championId' or k == 'winRate':
 					continue
 				else:
 					i+=1
@@ -799,9 +802,10 @@ def generate_data(vis=0):
 		for key,value in data.items():
 			champs = value['name']
 			classe = tags[int(value['primaryTag'])-1]
+			winRate = value['winRate']*100
 
 			for k,v in value.items():
-				if k == 'qtd' or k == 'championId' or k=='name' or k=='primaryTag':
+				if k == 'qtd' or k == 'championId' or k=='name' or k=='primaryTag' or k == 'winRate':
 					continue
 				else:
 					if k not in treemap_data:
@@ -810,7 +814,8 @@ def generate_data(vis=0):
 						treemap_data[k].append({
 						"key": champs,
 						"classe": classe,
-						"value": int(v)
+						"value": int(v),
+						"winRate": winRate
 					})
 		print(treemap_data)
 		with open('matches/static/jsons/treemap.json', 'w') as outfile:  

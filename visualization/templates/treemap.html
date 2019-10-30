@@ -262,7 +262,7 @@ function main(o, data) {
     t.call(text);
 
     g.selectAll("rect")
-        .style("fill", function(d) { return color(d.key); });
+        .style("fill", function(d) { return changeColor(d); });
 
     function transition(d) {
       if (transitioning || !d) return;
@@ -341,6 +341,30 @@ for(key in dados){
   if(atr==null) 
     atr=key;
   document.getElementById('atributos').innerHTML+='<li><input type="radio" class="atr-radio" id="'+key+'" name="atr-radio" onclick="changeAtr(this)"><label>'+key+'</label></li>'
+}
+var maxWinRate = 0;
+var minWinRate = -1;
+for(var i=0;i<dados[atr].length;i++){
+  if(dados[atr][i].winRate>maxWinRate){
+    maxWinRate = dados[atr][i].winRate;
+  }
+  if( (dados[atr][i].winRate<minWinRate || minWinRate==-1) && dados[atr][i].winRate != 0){
+    minWinRate = dados[atr][i].winRate;
+  }
+
+}
+function changeColor(d){
+  let rate = (d.winRate-minWinRate)/(maxWinRate-minWinRate)
+  if (rate>0.8)
+    return '#b30000'
+  else if(rate>0.6)
+    return '#e34a33'
+  else if(rate>0.4)
+    return '#fc8d59'
+  else if(rate>0.2)
+    return '#fdcc8a'
+  return '#fef0d9'
+
 }
 document.getElementById(atr).checked = true
 document.getElementById(atr).dispatchEvent(new Event('click'))
