@@ -12,7 +12,6 @@ Adapted from http://bl.ocks.org/ganeshv/6a8e9ada3ab7f2d88022, country example
 
     ul{
       list-style: none;
-      display: inline-flex;
     }
     ul.avs > li{
       display: inline;
@@ -27,7 +26,7 @@ Adapted from http://bl.ocks.org/ganeshv/6a8e9ada3ab7f2d88022, country example
 
 .title {
     font-weight: bold;
-    font-size: 24px;
+    font-size: 1.0em;
     text-align: center;
     margin-top: 6px;
     margin-bottom: 6px;
@@ -76,13 +75,31 @@ rect.parent {
   fill: #bbb;
 }
 
+
+.color-viewer{
+  width: 10px;
+  height: 10px;
+  border: 1px solid black;
+}
+
+.colorPicker{
+  max-width: 100px;
+}
+
+.content-inline{
+  display: inline-flex;
+}
+
 </style>
 </head>
 
 <body>
-<ul id="atributos"></ul>
-<div id="chart"></div>
+<ul class="content-inline" id="atributos"></ul>
 
+<div class="content-inline">
+<div id="chart"></div>
+<ul id="colorPickerPositive" class="colorPicker"><li id="columnTitleAcima"></li></ul>
+</div>
 <script src="https://code.jquery.com/jquery-1.7.2.min.js"></script>
 <script src="https://d3js.org/d3.v3.min.js"></script>
 <script>
@@ -103,7 +120,7 @@ var defaults = {
     width: 960,
     height: 500
 };
-
+var svg;
 function main(o, data) {
   var root,
       opts = $.extend(true, {}, defaults, o),
@@ -133,7 +150,7 @@ function main(o, data) {
       .ratio(height / width * 0.5 * (1 + Math.sqrt(5)))
       .round(false);
   
-  var svg = d3.select("#chart").append("svg")
+  svg = d3.select("#chart").append("svg")
       .attr("width", width + margin.left + margin.right)
       .attr("height", height + margin.bottom + margin.top)
       .style("margin-left", -margin.left + "px")
@@ -240,7 +257,7 @@ function main(o, data) {
         .attr("class", "child")
         .call(rect)
       .append("title")
-        .text(function(d) { return d.key + " (" + formatNumber(d.value) + ")"; });
+        .text(function(d) { return d.key + " (" + formatNumber(d.value) + ")"+extraData(d)});
     children.append("text")
         .attr("class", "ctext")
         .text(function(d) { return d.key; })
@@ -256,9 +273,9 @@ function main(o, data) {
 
     t.append("tspan")
         .text(function(d) { return d.key; });
-    t.append("tspan")
+    /*t.append("tspan")
         .attr("dy", "1.0em")
-        .text(function(d) { return formatNumber(d.value); });
+        .text(function(d) { return formatNumber(d.value); });*/
     t.call(text);
 
     g.selectAll("rect")
@@ -313,8 +330,8 @@ function main(o, data) {
 
   function text2(text) {
     text.attr("x", function(d) { return x(d.x + d.dx) - this.getComputedTextLength() - 6; })
-        .attr("y", function(d) { return y(d.y + d.dy) - 6; })
-        .style("opacity", function(d) { return this.getComputedTextLength() < x(d.x + d.dx) - x(d.x) ? 1 : 0; });
+        .attr("y", function(d) { return y(d.y + d.dy) - 6; });
+        //.style("font-size", function(d) { return this.getComputedTextLength() < x(d.x + d.dx) - x(d.x) ? "1.0em" : "0.8em"; });
   }
 
   function rect(rect) {
@@ -330,31 +347,123 @@ function main(o, data) {
         : d.key + " (" + formatNumber(d.value) + ")";
   }
 }
+var cores = [
+//multi-hue
+  ['#edf8fb','#b2e2e2','#66c2a4','#2ca25f','#006d2c'],
+  ['#edf8fb','#b3cde3','#8c96c6','#8856a7','#810f7c'],
+  ['#f0f9e8','#bae4bc','#7bccc4','#43a2ca','#0868ac'],
+  ['#fef0d9','#fdcc8a','#fc8d59','#e34a33','#b30000'],
+  ['#f1eef6','#bdc9e1','#74a9cf','#2b8cbe','#045a8d'],
+  ['#f6eff7','#bdc9e1','#67a9cf','#1c9099','#016c59'],
+  ['#f1eef6','#d7b5d8','#df65b0','#dd1c77','#980043'],
+  ['#feebe2','#fbb4b9','#f768a1','#c51b8a','#7a0177'],
+  ['#ffffcc','#c2e699','#78c679','#31a354','#006837'],
+  ['#ffffcc','#a1dab4','#41b6c4','#2c7fb8','#253494'],
+  ['#ffffd4','#fed98e','#fe9929','#d95f0e','#993404'],
+  ['#ffffb2','#fecc5c','#fd8d3c','#f03b20','#bd0026'],
+//single-hue
+  ['#eff3ff','#bdd7e7','#6baed6','#3182bd','#08519c'],
+  ['#edf8e9','#bae4b3','#74c476','#31a354','#006d2c'],
+  ['#f7f7f7','#cccccc','#969696','#636363','#252525'],
+  ['#feedde','#fdbe85','#fd8d3c','#e6550d','#a63603'],
+  ['#f2f0f7','#cbc9e2','#9e9ac8','#756bb1','#54278f'],
+  ['#fee5d9','#fcae91','#fb6a4a','#de2d26','#a50f15']
+]
+var positive = document.getElementById('colorPickerPositive')
+var positiveStr = ''
+for(var i=0;i<cores.length;i++){
+  positiveStr+='<li class="content-inline"><input type="checkbox" class="positive-color-checkboxes" id="positiveCor-'+i+'"/>'
+  for(var j=0;j<cores[i].length;j++){
+    positiveStr+='<div class="color-viewer" style="background-color: '+cores[i][j]+';"></div>'
+  }
+  positiveStr+='</li>'
+}
+positive.innerHTML+=positiveStr
+
+var positives = document.getElementsByClassName('positive-color-checkboxes')
+
+var positiveIndex = -1
+function changeState(caixa){
+  var spl = caixa.id.split('-')
+  for(var j = 0;j<positives.length; j++){
+    if(j!=parseInt(spl[1])&&positives[j].checked){
+      positives[j].checked=false;
+    }
+  }
+
+  if(caixa.checked){
+    positiveIndex = parseInt(spl[1])
+  }
+  else{
+    positiveIndex = -1
+  }
+  
+  
+  svg.selectAll("rect")
+    .style("fill", function(d) { return changeColor(d); });
+}
+
+for (var i = 0; i < positives.length; i++) {
+  positives[i].addEventListener('change', (event) => {
+    changeState(event.target)
+  })
+}
+
+function extraData(d){
+  if("winRate" in d){
+    return "\nWins ("+d.winRate.toFixed(2)+"%)";
+  }
+  return "";
+}
 function changeAtr(e){    
   document.getElementById('chart').innerHTML=''
-  let dd = d3.nest().key(function(d) { return d.classe; }).entries(dados[e.id]);
+  let dd = d3.nest().key(function(d) { return d.attribute; }).key(function(d) { return d.classe; }).entries(dados[e.id]);
   main({title: e.id}, {key: e.id, values: dd});
 }
 var dados = {{dados|safe}}
 var atr = null;
+
+var maxWinRate = {};
+var minWinRate = {};
 for(key in dados){
   if(atr==null) 
     atr=key;
   document.getElementById('atributos').innerHTML+='<li><input type="radio" class="atr-radio" id="'+key+'" name="atr-radio" onclick="changeAtr(this)"><label>'+key+'</label></li>'
 }
-var maxWinRate = 0;
-var minWinRate = -1;
 for(var i=0;i<dados[atr].length;i++){
-  if(dados[atr][i].winRate>maxWinRate){
-    maxWinRate = dados[atr][i].winRate;
+  if(! (dados[atr][i].classe in maxWinRate)){
+    maxWinRate[dados[atr][i].classe] = 0;
+    minWinRate[dados[atr][i].classe] = -1;    
   }
-  if( (dados[atr][i].winRate<minWinRate || minWinRate==-1) && dados[atr][i].winRate != 0){
-    minWinRate = dados[atr][i].winRate;
+  if(dados[atr][i].winRate>maxWinRate[dados[atr][i].classe]){
+    maxWinRate[dados[atr][i].classe] = dados[atr][i].winRate;
+  }
+  if( (dados[atr][i].winRate<minWinRate[dados[atr][i].classe] || minWinRate[dados[atr][i].classe]==-1) && dados[atr][i].winRate != 0){
+    minWinRate[dados[atr][i].classe] = dados[atr][i].winRate;
   }
 
 }
+  console.log(maxWinRate)
 function changeColor(d){
-  let rate = (d.winRate-minWinRate)/(maxWinRate-minWinRate)
+  if(!d || !('classe' in d )){
+    if(positiveIndex!=-1){
+      return cores[positiveIndex][2]      
+    }
+    return '#fef0d9'
+  }
+
+  let rate = (d.winRate-minWinRate[d.classe])/(maxWinRate[d.classe]-minWinRate[d.classe])
+  if(positiveIndex!=-1){
+    if (rate>0.8)
+      return cores[positiveIndex][4]
+    else if(rate>0.6)
+      return cores[positiveIndex][3]
+    else if(rate>0.4)
+      return cores[positiveIndex][2]
+    else if(rate>0.2)
+      return cores[positiveIndex][1]
+    return cores[positiveIndex][0]
+  }
   if (rate>0.8)
     return '#b30000'
   else if(rate>0.6)

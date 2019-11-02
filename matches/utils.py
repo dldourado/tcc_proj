@@ -815,7 +815,8 @@ def generate_data(vis=0):
 						"key": champs,
 						"classe": classe,
 						"value": int(v),
-						"winRate": winRate
+						"winRate": winRate,
+						"attribute":k
 					})
 		print(treemap_data)
 		with open('matches/static/jsons/treemap.json', 'w') as outfile:  
